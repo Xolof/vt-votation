@@ -24,7 +24,7 @@ $existing_votation_form_id = VOTATION_FORM_ID;
       <select required id="vtv_votation_page" name="vtv[votation_page]">
         <option value="">Välj en sida</option>
         <?php foreach ($vt_votation_pages as $page): ?>
-          <option value="<?= $page->ID ?>" <?= $existing_votation_page_id == $page->ID ? "selected" : null ?>><?= $page->post_title ?></option>
+          <option value="<?= $page->ID ?>" <?= $existing_votation_page_id == $page->ID ? 'selected' : null ?>><?= $page->post_title ?></option>
         <?php endforeach; ?>
       </select>
       <br>
@@ -34,7 +34,7 @@ $existing_votation_form_id = VOTATION_FORM_ID;
       <select required id="vtv_votation_forminator_form" name="vtv[votation_forminator_form]">
         <option value="">Välj ett formulär</option>
         <?php foreach ($vt_votation_forminator_forms as $form): ?>
-          <option value="<?= $form->id ?>" <?= $existing_votation_form_id == $form->id ? "selected" : null ?>><?= $form->settings["formName"] ?></option>
+          <option value="<?= $form->id ?>" <?= $existing_votation_form_id == $form->id ? 'selected' : null ?>><?= $form->settings['formName'] ?></option>
         <?php endforeach; ?>
       </select>
       <br>

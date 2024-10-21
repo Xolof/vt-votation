@@ -13,28 +13,87 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-define('VOTATION_PAGE_ID', get_option("vt_votation_page"));
-define('VOTATION_FORM_ID', get_option("vt_votation_forminator_form"));
+define('VOTATION_PAGE_ID', get_option('vt_votation_page'));
+define('VOTATION_FORM_ID', get_option('vt_votation_forminator_form'));
 define('DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP', false);
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
+define('VOTATION_PAGE_TITLE', 'Årets olämpligaste barnbok 0.2.0');
 
 register_activation_hook(
-	__FILE__,
-	'vtv_activate'
+  __FILE__,
+  'vtv_activate'
 );
 register_deactivation_hook(
-	__FILE__,
-	'vtv_deactivate'
+  __FILE__,
+  'vtv_deactivate'
 );
 
-function vtv_activate() {
-  file_put_contents(__DIR__ . '/vtv.log', date('Y-m-d H:i:s') . " vtv-votation activated.\n", FILE_APPEND);
+function vtv_activate()
+{
+  $pages = get_pages();
+  $page_id = null;
+  foreach ($pages as $page) {
+    if ($page->post_title == VOTATION_PAGE_TITLE) {
+      $page_id = $page->ID;
+    }
+  }
+  if (empty($page_id)) {
+    // Add our custom template to the admin's templates dropdown
+    add_filter('theme_page_templates', 'vtv_template_as_option', 10, 3);
+
+    function vtv_template_as_option($page_templates, $theme, $post)
+    {
+      $page_templates['votation_page.php'] = 'Votation Page';
+      return $page_templates;
+    }
+
+    $page_title = VOTATION_PAGE_TITLE;
+    $page_id = wp_insert_post(
+      array(
+        'comment_status' => 'close',
+        'ping_status' => 'close',
+        'post_author' => 1,
+        'post_title' => $page_title,
+        'post_name' => sanitize_title($page_title),
+        'post_status' => 'publish',
+        'post_content' => '',
+        'post_type' => 'page',
+        'page_template' => 'votation_page.php'
+      )
+    );
+  }
 }
-function vtv_deactivate() {
-  file_put_contents(__DIR__ . '/vtv.log', date('Y-m-d H:i:s') . " vtv-votation deactivated.\n", FILE_APPEND);
+
+// When our custom template has been chosen then display it for the page
+add_filter('template_include', 'vtv_load_template', 99);
+
+function vtv_load_template($template)
+{
+  global $post;
+  $custom_template_slug = 'votation_page.php';
+  $page_template_slug = get_page_template_slug($post->ID);
+  if ($page_template_slug == $custom_template_slug) {
+    return plugin_dir_path(__FILE__) . 'templates/' . $custom_template_slug;
+  }
+  return $template;
+}
+
+function vtv_deactivate()
+{
+  $pages = get_pages();
+  $page_id = null;
+  foreach ($pages as $page) {
+    if ($page->post_title == VOTATION_PAGE_TITLE) {
+      $page_id = $page->ID;
+    }
+  }
+  if ($page_id) {
+    wp_delete_post($page_id);
+  }
 }
 
 add_action('wp_enqueue_scripts', 'vitillsammans_enqueue_scripts');
+
 function vitillsammans_enqueue_scripts()
 {
   if (get_the_ID() == VOTATION_PAGE_ID) {
@@ -89,6 +148,7 @@ function my_admin_page()
   );
   remove_submenu_page('vt-votation', 'vt-votation');
 }
+
 add_action('admin_menu', 'my_admin_page');
 
 function render_votation_manual()
@@ -104,30 +164,31 @@ function render_votation_settings()
 }
 
 add_action('admin_post_vtv_form_response', 'the_form_response');
+
 function the_form_response()
 {
   if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
-    $votation_page = $_POST["vtv"]["votation_page"];
-    $votation_forminator_form = $_POST["vtv"]["votation_forminator_form"];
-   
+    $votation_page = $_POST['vtv']['votation_page'];
+    $votation_forminator_form = $_POST['vtv']['votation_forminator_form'];
+
     if (!is_numeric($votation_page) || !is_numeric($votation_forminator_form)) {
-      exit("Invalid form data");
+      exit('Invalid form data');
     }
 
     $result = false;
 
-    if (!get_option("vt_votation_page")) {
+    if (!get_option('vt_votation_page')) {
       $result = add_option('vt_votation_page', $votation_page, '', 'no');
-    } else if (get_option("vt_votation_page") != $votation_page) {
+    } else if (get_option('vt_votation_page') != $votation_page) {
       $result = update_option('vt_votation_page', $votation_page, '', 'no');
     } else {
       // Nothing to update
       $result = true;
     }
-    
-    if (!get_option("vt_votation_forminator_form")) {
+
+    if (!get_option('vt_votation_forminator_form')) {
       $result = add_option('vt_votation_forminator_form', $votation_forminator_form, '', 'no');
-    } else if (get_option("vt_votation_forminator_form") != $votation_forminator_form) {
+    } else if (get_option('vt_votation_forminator_form') != $votation_forminator_form) {
       $result = update_option('vt_votation_forminator_form', $votation_forminator_form, '', 'no');
     } else {
       // Nothing to update
@@ -135,19 +196,19 @@ function the_form_response()
     }
 
     if ($result == false) {
-      exit("option update failed");
+      exit('option update failed');
     }
 
-    custom_redirect("success");
+    custom_redirect('success');
     exit;
   } else {
     wp_die(
       __('Invalid nonce specified',
-      'vt-votation'),
+        'vt-votation'),
       __('Error', 'vt-votation'),
       array(
-      'response' => 403,
-      'back_link' => 'admin.php?page=vt-votation'
+        'response' => 403,
+        'back_link' => 'admin.php?page=vt-votation'
       )
     );
   }
@@ -172,15 +233,18 @@ function custom_redirect($status)
 function print_plugin_admin_notices()
 {
   if (isset($_REQUEST['vtv_admin_add_notice'])) {
-    if ($_REQUEST['vtv_admin_add_notice'] === 'success') { ?>
+    if ($_REQUEST['vtv_admin_add_notice'] === 'success') {
+      ?>
         <div class="notice notice-success is-dismissible">
           <p><b>Inställningarna sparades.</b></p>
         </div>
-  <?php }
+  <?php
+    }
   } else {
     return;
   }
 }
+
 add_action('admin_notices', 'print_plugin_admin_notices');
 
 function render_votation_results()
