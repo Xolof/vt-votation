@@ -1,0 +1,273 @@
+<?php
+
+/*
+ * Plugin Name: VT Votation
+ * Description: Anpassningar för omröstning om årets mest olämpliga barnbok.
+ * Version: 0.1.0
+ * Author: Liberdev
+ * Author URI: http://liberdev.se
+ * Text Domain: vt-votation
+ */
+
+if (!defined('ABSPATH')) {
+  exit;  // Exit if accessed directly.
+}
+
+define('VOTATION_PAGE_ID', get_option("vt_votation_page"));
+define('VOTATION_FORM_ID', get_option("vt_votation_forminator_form"));
+define('DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP', false);
+define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
+
+add_action('wp_enqueue_scripts', 'vitillsammans_enqueue_scripts');
+
+function vitillsammans_enqueue_scripts()
+{
+  if (get_the_ID() == VOTATION_PAGE_ID) {
+    wp_enqueue_script(
+      'votation',
+      plugins_url('/assets/js/votation.js', __FILE__),
+      array(),
+      '1.0',
+      true
+    );
+    wp_enqueue_style(
+      'votation',
+      plugins_url('/assets/css/votation.css', __FILE__)
+    );
+  };
+}
+
+function my_admin_page()
+{
+  add_menu_page(
+    'Årets olämpligaste barnbok',
+    'Årets olämpligaste barnbok',
+    'manage_options',
+    'vt-votation',
+    'render_votation_results',
+    'dashicons-book',
+    3
+  );
+  add_submenu_page(
+    'vt-votation',
+    'Resultat',
+    'Resultat',
+    'manage_options',
+    'render_votation_results',
+    'render_votation_results'
+  );
+  add_submenu_page(
+    'vt-votation',
+    'Inställningar',
+    'Inställningar',
+    'manage_options',
+    'render_votation_settings',
+    'render_votation_settings'
+  );
+  add_submenu_page(
+    'vt-votation',
+    'Manual',
+    'Manual',
+    'manage_options',
+    'render_votation_manual',
+    'render_votation_manual'
+  );
+  remove_submenu_page('vt-votation', 'vt-votation');
+}
+add_action('admin_menu', 'my_admin_page');
+
+function render_votation_manual()
+{
+  require_once (__DIR__ . '/templates/votation_manual.php');
+}
+
+function render_votation_settings()
+{
+  $vt_votation_pages = get_pages();
+  $vt_votation_forminator_forms = Forminator_API::get_forms();
+  require_once (__DIR__ . '/templates/votation_settings.php');
+}
+
+add_action('admin_post_vtv_form_response', 'the_form_response');
+function the_form_response()
+{
+  if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
+    $votation_page = $_POST["vtv"]["votation_page"];
+    $votation_forminator_form = $_POST["vtv"]["votation_forminator_form"];
+   
+    if (!is_numeric($votation_page) || !is_numeric($votation_forminator_form)) {
+      exit("Invalid form data");
+    }
+
+    $result = false;
+
+    if (!get_option("vt_votation_page")) {
+      $result = add_option('vt_votation_page', $votation_page, '', 'no');
+    } else if (get_option("vt_votation_page") != $votation_page) {
+      $result = update_option('vt_votation_page', $votation_page, '', 'no');
+    } else {
+      // Nothing to update
+      $result = true;
+    }
+    
+    if (!get_option("vt_votation_forminator_form")) {
+      $result = add_option('vt_votation_forminator_form', $votation_forminator_form, '', 'no');
+    } else if (get_option("vt_votation_forminator_form") != $votation_forminator_form) {
+      $result = update_option('vt_votation_forminator_form', $votation_forminator_form, '', 'no');
+    } else {
+      // Nothing to update
+      $result = true;
+    }
+
+    if ($result == false) {
+      exit("option update failed");
+    }
+
+    custom_redirect("success");
+    exit;
+  } else {
+    wp_die(
+      __('Invalid nonce specified',
+      'vt-votation'),
+      __('Error', 'vt-votation'),
+      array(
+      'response' => 403,
+      'back_link' => 'admin.php?page=vt-votation'
+      )
+    );
+  }
+}
+
+function custom_redirect($status)
+{
+  wp_redirect(
+    esc_url_raw(
+      add_query_arg(
+        array(
+          'vtv_admin_add_notice' => $status
+        ),
+        admin_url(
+          'admin.php?page=render_votation_settings'
+        )
+      )
+    )
+  );
+}
+
+function print_plugin_admin_notices()
+{
+  if (isset($_REQUEST['vtv_admin_add_notice'])) {
+    if ($_REQUEST['vtv_admin_add_notice'] === 'success') { ?>
+        <div class="notice notice-success is-dismissible">
+          <p><b>Inställningarna sparades.</b></p>
+        </div>
+  <?php }
+  } else {
+    return;
+  }
+}
+add_action('admin_notices', 'print_plugin_admin_notices');
+
+function render_votation_results()
+{
+  global $wpdb;
+  $votation_result_query = <<<EOD
+      SELECT
+        meta_value as books,
+        COUNT(*) as num_votes
+      FROM wp_frmt_form_entry
+      LEFT JOIN wp_frmt_form_entry_meta
+      USING(entry_id)
+      WHERE
+        form_id = %d AND meta_key="checkbox-1"
+     GROUP BY meta_value;
+    EOD;
+  $votation_results_db = $wpdb->get_results(
+    $wpdb->prepare(
+      $votation_result_query,
+      VOTATION_FORM_ID
+    )
+  );
+  $votation_results_array = [];
+  require_once (__DIR__ . '/templates/votation_results.php');
+}
+
+function checkIfEmailHasAlreadyVoted($email)
+{
+  global $wpdb;
+  $email_already_voted_query = <<<EOD
+      SELECT
+        EXISTS(
+          SELECT meta_value
+          FROM wp_frmt_form_entry
+           LEFT JOIN wp_frmt_form_entry_meta
+           USING(entry_id)
+           WHERE meta_key="email-1"
+           AND form_id=%d AND meta_value="%s"
+        ) as email_already_voted;
+    EOD;
+  $result = $wpdb->get_results(
+    $wpdb->prepare(
+      $email_already_voted_query,
+      VOTATION_FORM_ID,
+      $email
+    )
+  );
+  return $result;
+}
+
+add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
+  if (intval($form_id) == VOTATION_FORM_ID) {
+    $user_ip = Forminator_Geo::get_user_ip();
+    file_put_contents(__DIR__ . '/votation-ip.log', date('Y-m-d H:i:s') . ' ' . $user_ip . "\n", FILE_APPEND);
+    $email = $field_data_array[1]['value'];
+    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email);
+    if ($email_already_voted_result[0]->email_already_voted == '1') {
+      $submit_errors[] = ONLY_VOTE_ONE_TIME_MESSAGE;
+    };
+  }
+  return $submit_errors;
+}, 15, 3);
+
+add_filter('forminator_custom_form_invalid_form_message', function ($invalid_form_message, $form_id) {
+  if ($form_id == VOTATION_FORM_ID) {
+    $email = $_POST['email-1'];
+    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email);
+    if ($email_already_voted_result[0]->email_already_voted == '1') {
+      $invalid_form_message = ONLY_VOTE_ONE_TIME_MESSAGE;
+    };
+    return $invalid_form_message;
+  }
+  return $invalid_form_message;
+}, 10, 3);
+
+if (DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP == true) {
+  add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
+    $message = __('Du kan bara rösta en gång.', 'forminator');
+    if (intval($form_id) == VOTATION_FORM_ID) {
+      $user_ip = Forminator_Geo::get_user_ip();
+      file_put_contents(__DIR__ . '/votation-ip.log', date('Y-m-d H:i:s') . ' ' . $user_ip . "\n", FILE_APPEND);
+      if (!empty($user_ip)) {
+        $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
+        if (!empty($last_entry)) {
+          $submit_errors[]['submit'] = $message;
+        }
+      }
+    }
+    return $submit_errors;
+  }, 15, 3);
+
+  add_filter('forminator_custom_form_invalid_form_message', function ($invalid_form_message, $form_id) {
+    if ($form_id != VOTATION_FORM_ID) {
+      return $invalid_form_message;
+    }
+    $user_ip = Forminator_Geo::get_user_ip();
+    if (!empty($user_ip)) {
+      $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
+      if (!empty($last_entry)) {
+        $invalid_form_message = __('Du kan bara rösta en gång.', 'forminator');
+      }
+    }
+    return $invalid_form_message;
+  }, 10, 2);
+}

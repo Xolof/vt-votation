@@ -1,0 +1,19 @@
+.votationButton {
+  cursor: pointer;
+}
+
+.gb-button.votationButton:hover {
+  background-color: #004fa9;
+}
+
+.forminator-ui#forminator-module-51.forminator-design--default .forminator-button.forminator-button-submit {
+  background-color: #0366d6;
+  padding: 15px 20px;
+  font-size: 17px;
+}
+
+.forminator-ui#forminator-module-51.forminator-design--default .forminator-button.forminator-button-submit:hover {
+  background-color: #004fa9;
+  box-shadow: none;
+}
+
