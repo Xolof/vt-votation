@@ -18,8 +18,23 @@ define('VOTATION_FORM_ID', get_option("vt_votation_forminator_form"));
 define('DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP', false);
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
 
-add_action('wp_enqueue_scripts', 'vitillsammans_enqueue_scripts');
+register_activation_hook(
+	__FILE__,
+	'vtv_activate'
+);
+register_deactivation_hook(
+	__FILE__,
+	'vtv_deactivate'
+);
 
+function vtv_activate() {
+  file_put_contents(__DIR__ . '/vtv.log', date('Y-m-d H:i:s') . " vtv-votation activated.\n", FILE_APPEND);
+}
+function vtv_deactivate() {
+  file_put_contents(__DIR__ . '/vtv.log', date('Y-m-d H:i:s') . " vtv-votation deactivated.\n", FILE_APPEND);
+}
+
+add_action('wp_enqueue_scripts', 'vitillsammans_enqueue_scripts');
 function vitillsammans_enqueue_scripts()
 {
   if (get_the_ID() == VOTATION_PAGE_ID) {
