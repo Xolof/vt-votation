@@ -38,15 +38,6 @@ function vtv_activate()
     }
   }
   if (empty($page_id)) {
-    // Add our custom template to the admin's templates dropdown
-    add_filter('theme_page_templates', 'vtv_template_as_option', 10, 3);
-
-    function vtv_template_as_option($page_templates, $theme, $post)
-    {
-      $page_templates['votation_page.php'] = 'Votation Page';
-      return $page_templates;
-    }
-
     $page_title = VOTATION_PAGE_TITLE;
     $page_id = wp_insert_post(
       array(
@@ -64,20 +55,6 @@ function vtv_activate()
   }
 }
 
-// When our custom template has been chosen then display it for the page
-add_filter('template_include', 'vtv_load_template', 99);
-
-function vtv_load_template($template)
-{
-  global $post;
-  $custom_template_slug = 'votation_page.php';
-  $page_template_slug = get_page_template_slug($post->ID);
-  if ($page_template_slug == $custom_template_slug) {
-    return plugin_dir_path(__FILE__) . 'templates/' . $custom_template_slug;
-  }
-  return $template;
-}
-
 function vtv_deactivate()
 {
   $pages = get_pages();
@@ -90,6 +67,32 @@ function vtv_deactivate()
   if ($page_id) {
     wp_delete_post($page_id);
   }
+}
+
+// Add our custom template to the admin's templates dropdown
+add_filter('theme_page_templates', 'vtv_template_as_option', 10, 3);
+
+function vtv_template_as_option($page_templates, $theme, $post)
+{
+  $page_templates['votation_page.php'] = 'Votation Page';
+  return $page_templates;
+}
+
+// When our custom template has been chosen then display it for the page
+add_filter('template_include', 'vtv_load_template', 99);
+
+function vtv_load_template($template)
+{
+  global $post;
+  if (!$post) {
+    return $template;
+  }
+  $custom_template_slug = 'votation_page.php';
+  $page_template_slug = get_page_template_slug($post->ID);
+  if ($page_template_slug == $custom_template_slug) {
+    return plugin_dir_path(__FILE__) . 'templates/' . $custom_template_slug;
+  }
+  return $template;
 }
 
 add_action('wp_enqueue_scripts', 'vitillsammans_enqueue_scripts');
