@@ -160,11 +160,9 @@ function vtv_save_post($post_id)
   if (get_post_type($post_id) == 'olamplig-bok') {
     $custom_field_values = get_fields($post_id);
     $title = $custom_field_values['titel'];
-
     $form_to_update = vtv_get_forminator_form_by_name(VOTATION_FORM_NAME);
     $books_field = Forminator_API::get_form_field($form_to_update->id, 'books', true);
     $options = $books_field['options'];
-
     $new_options = array();
     $post_id_already_exists = false;
     foreach ($options as $old_option) {
@@ -191,11 +189,7 @@ function vtv_save_post($post_id)
       );
     }
 
-    vtv_log($new_options);
-
     $books_field['options'] = $new_options;
-    vtv_log($books_field);
-
     $form_id = $form_to_update->id;
     Forminator_API::update_form_field($form_id, 'books', $books_field);
   }
@@ -424,7 +418,7 @@ function render_votation_results()
       LEFT JOIN wp_frmt_form_entry_meta
       USING(entry_id)
       WHERE
-        form_id = %d AND meta_key="checkbox-1"
+        form_id = %d AND meta_key="books"
      GROUP BY meta_value;
     EOD;
   $votation_results_db = $wpdb->get_results(
