@@ -53,6 +53,55 @@ function vtv_activate()
       )
     );
   }
+  vtv_add_form();
+}
+
+function vtv_add_form()
+{
+  $wrappers = array(
+    array(
+      'wrapper_id' => 'wrapper-1511378776546-9087',
+      'fields' => array(
+        array(
+          'element_id' => 'books',
+          'type' => 'checkbox',
+          'cols' => '12',
+          'required' => 'true',
+          'field_label' => 'Böcker',
+          'options' => array(
+            array(
+              'label' => 'Bok 1',
+              'value' => 'bok-1'
+            ),
+            array(
+              'label' => 'Bok 2',
+              'value' => 'bok-2'
+            ),
+            array(
+              'label' => 'Bok 3',
+              'value' => 'bok-3'
+            )
+          )
+        ),
+      ),
+    ),
+  );
+
+  $settings = array(
+    'formName' => 'Votation Form',
+    'thankyou' => 'true',
+    'thankyou-message' => __('Tack för din röst.', 'vt-votation'),
+    'use-custom-submit' => 'true',
+    'custom-submit-text' => __('Rösta', 'vt-votation'),
+    'use-custom-invalid-form' => 'true',
+    'custom-invalid-form-message' => __('Fel: Ogiltigt ifyllt formulär!', 'vt-votation')
+  );
+
+  Forminator_API::add_form(
+    'Votation Form',
+    $wrappers,
+    $settings
+  );
 }
 
 function vtv_deactivate()
@@ -66,6 +115,13 @@ function vtv_deactivate()
   }
   if ($page_id) {
     wp_delete_post($page_id);
+  }
+
+  $forms = Forminator_API::get_forms();
+  foreach ($forms as $form) {
+    if ($form->name == 'Votation Form') {
+      Forminator_API::delete_form($form->id);
+    }
   }
 }
 
