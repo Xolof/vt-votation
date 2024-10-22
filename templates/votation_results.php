@@ -3,14 +3,14 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 ?>
-
 <h1><?= __('Resultat', 'my-textdomain'); ?></h1>
 <?php
 foreach ($votation_results_db as $result) {
   $num_votes = $result->num_votes;
-  $books = explode(', ', $result->books);
+  $books = unserialize($result->books);
   for ($i = 0; $i < $num_votes; $i++) {
     foreach ($books as $book) {
+      $book = ucfirst(str_replace("-", " ", $book));
       if (!array_key_exists($book, $votation_results_array)) {
         $votation_results_array[$book] = 1;
       } else {
@@ -35,7 +35,7 @@ arsort($votation_results_array);
         <?= $index ?>
       </td>
       <td>
-        <?= __($book, 'my-textdomain') ?>
+        <?= htmlentities(__($book, 'my-textdomain')) ?>
       </td>
       <td>    
         <?= $num_votes ?>
