@@ -20,7 +20,7 @@ get_header();
         <div class="inside-article">
           <h1><?php the_title(); ?></h1>
           <?php while (have_posts()): ?>
-            <?php the_content(); ?>
+            <?php the_field('explanation'); ?>
             <?php the_post(); ?>
             <?php
             $args = array(
@@ -38,7 +38,9 @@ get_header();
                     src="<?php the_field('bild'); ?>"
                   />
                   <p><?php the_field('beskrivning'); ?></p>
-                  <button class="votationButton">Lägg till i min lista</button>
+                  <button
+                    class="votationButton <?= sanitize_title(get_field('titel')) ?>"
+                  >Lägg till i min lista</button>
                   <br>
                   <br>
                   <br>
@@ -48,6 +50,7 @@ get_header();
             wp_reset_query();  // Restore global post data stomped by the_post().
             ?>
           <?php endwhile; ?>
+          <?php the_content(); ?>
         </div>
       </article>
     <?php
@@ -60,7 +63,65 @@ get_header();
       do_action('generate_after_main_content');
     ?>
 		</main>
-	</div>
+  </div>
+<script>
+const buttonNodeList = document.querySelectorAll(".votationButton");
+const checkBoxInputs = document.querySelectorAll("input[type=checkbox]");
+
+let checkforSubmission = setInterval(() => {
+  if (document.querySelector(".forminator-success")) {
+    Array.from(buttonNodeList).forEach(element => {
+      element.style.display = "none";
+      element.style.backgroundColor = "#4880bf"; 
+      element.style.color = "#ddd"; 
+      element.setAttribute("disabled", true);
+    });
+  };
+}, 10);
+
+
+const checkBoxImageURL = "/app/plugins/vt-votation/assets/images/checkmark-svgrepo-com.svg";
+
+function toggleAdded(target) {
+  const addText = "Lägg till i min lista";
+  const addedText = `Tillagd i din lista &nbsp; <img src="${checkBoxImageURL}" alt="checkbox" />`;
+  if (target.innerHTML !== addText) {
+    target.innerHTML = addText;
+  } else {
+    target.innerHTML = addedText;
+  }
+}
+
+[...buttonNodeList].forEach(element => {
+  element.addEventListener("click", (e) => {
+    if (e.target.getAttribute("disabled")) {
+      return;
+    };
+      
+    toggleAdded(e.target);
+
+    const filteredClasses = Array.from(e.target.classList)
+      .filter(cssClass => {
+        checkBoxInputs.forEach(input => {
+          if (input.value === cssClass) {
+            input.checked = !input.checked;
+          }
+        });
+      });
+  });
+});
+
+
+[...checkBoxInputs].forEach(element => {
+  element.addEventListener("click", (e) => {
+    filteredButtons = Array.from(buttonNodeList).filter(button => {
+      return button.classList.contains(e.target.value)
+    });
+    toggleAdded(filteredButtons[0]);
+  });
+});
+
+</script>
 	<?php
 
     /**

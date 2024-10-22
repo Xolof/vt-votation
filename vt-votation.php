@@ -13,11 +13,17 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
+function vtv_log($string)
+{
+  file_put_contents(__DIR__ . '/vtv.log', json_encode($string) . "\n", FILE_APPEND);
+}
+
 define('VOTATION_PAGE_ID', get_option('vt_votation_page'));
 define('VOTATION_FORM_ID', get_option('vt_votation_forminator_form'));
 define('DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP', false);
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
 define('VOTATION_PAGE_TITLE', 'Årets olämpligaste barnbok 0.2.0');
+define('VOTATION_FORM_NAME', 'Votation Form');
 
 register_activation_hook(
   __FILE__,
@@ -56,8 +62,34 @@ function vtv_activate()
   vtv_add_form();
 }
 
+function vtv_get_custom_posts_by_type($type)
+{
+  $results = [];
+  $posts = $posts = get_posts([
+    'post_type' => 'olamplig-bok',
+    'post_status' => 'any',
+    'numberposts' => 999999999
+  ]);
+  foreach ($posts as $post) {
+    if ($post->post_name != '__trashed') {
+      $results[] = $post;
+    };
+  }
+  return $results;
+}
+
 function vtv_add_form()
 {
+  $book_posts = vtv_get_custom_posts_by_type('olamplig-bok');
+  $options = array();
+  foreach ($book_posts as $post) {
+    $options[] = array(
+      'label' => $post->post_title,
+      'value' => $post->post_name,
+      'id' => $post->ID
+    );
+  }
+
   $wrappers = array(
     array(
       'wrapper_id' => 'wrapper-1511378776546-9087',
@@ -68,27 +100,14 @@ function vtv_add_form()
           'cols' => '12',
           'required' => 'true',
           'field_label' => 'Böcker',
-          'options' => array(
-            array(
-              'label' => 'Bok 1',
-              'value' => 'bok-1'
-            ),
-            array(
-              'label' => 'Bok 2',
-              'value' => 'bok-2'
-            ),
-            array(
-              'label' => 'Bok 3',
-              'value' => 'bok-3'
-            )
-          )
+          'options' => $options
         ),
       ),
     ),
   );
 
   $settings = array(
-    'formName' => 'Votation Form',
+    'formName' => VOTATION_FORM_NAME,
     'thankyou' => 'true',
     'thankyou-message' => __('Tack för din röst.', 'vt-votation'),
     'use-custom-submit' => 'true',
@@ -98,7 +117,7 @@ function vtv_add_form()
   );
 
   Forminator_API::add_form(
-    'Votation Form',
+    VOTATION_FORM_NAME,
     $wrappers,
     $settings
   );
@@ -117,11 +136,99 @@ function vtv_deactivate()
     wp_delete_post($page_id);
   }
 
+  $form_to_delete = vtv_get_forminator_form_by_name(VOTATION_FORM_NAME);
+  Forminator_API::delete_form($form_to_delete->id);
+}
+
+function vtv_get_forminator_form_by_name($name)
+{
+  $result = null;
   $forms = Forminator_API::get_forms();
   foreach ($forms as $form) {
-    if ($form->name == 'Votation Form') {
-      Forminator_API::delete_form($form->id);
+    if ($form->settings['formName'] == $name) {
+      $result = $form;
     }
+  }
+  return $result;
+}
+
+add_action('acf/save_post', 'vtv_save_post');
+add_action('untrash_post', 'vtv_save_post', 10);
+
+function vtv_save_post($post_id)
+{
+  if (get_post_type($post_id) == 'olamplig-bok') {
+    $custom_field_values = get_fields($post_id);
+    $title = $custom_field_values['titel'];
+
+    $form_to_update = vtv_get_forminator_form_by_name(VOTATION_FORM_NAME);
+    $books_field = Forminator_API::get_form_field($form_to_update->id, 'books', true);
+    $options = $books_field['options'];
+
+    $new_options = array();
+    $post_id_already_exists = false;
+    foreach ($options as $old_option) {
+      $new_option = array();
+      if ($old_option['id'] == $post_id) {
+        $post_id_already_exists = true;
+        $new_option['label'] = $title;
+        $new_option['value'] = sanitize_title($title);
+        $new_option['id'] = $post_id;
+      } else {
+        $new_option['label'] = $old_option['label'];
+        $new_option['value'] = $old_option['value'];
+        $new_option['id'] = $old_option['id'];
+      };
+
+      $new_options[] = $new_option;
+    }
+
+    if (!$post_id_already_exists) {
+      $new_options[] = array(
+        'label' => $title,
+        'value' => sanitize_title($title),
+        'id' => $post_id
+      );
+    }
+
+    vtv_log($new_options);
+
+    $books_field['options'] = $new_options;
+    vtv_log($books_field);
+
+    $form_id = $form_to_update->id;
+    Forminator_API::update_form_field($form_id, 'books', $books_field);
+  }
+}
+
+add_action('wp_trash_post', 'vtv_trash_post', 10);
+
+function vtv_trash_post($post_id)
+{
+  if (get_post_type($post_id) == 'olamplig-bok') {
+    $custom_field_values = get_fields($post_id);
+    $form_to_update = vtv_get_forminator_form_by_name(VOTATION_FORM_NAME);
+    $title = $custom_field_values['titel'];
+    $books_field = Forminator_API::get_form_field($form_to_update->id, 'books', true);
+    $options = $books_field['options'];
+    $new_options = array();
+
+    foreach ($options as $old_option) {
+      $new_option = array();
+
+      if ($old_option['id'] != $post_id) {
+        $new_option['label'] = $old_option['label'];
+        $new_option['value'] = $old_option['value'];
+        $new_option['id'] = $old_option['id'];
+        $new_options[] = $new_option;
+      };
+    }
+
+    $books_field['options'] = $new_options;
+    vtv_log($books_field);
+
+    $form_id = $form_to_update->id;
+    Forminator_API::update_form_field($form_id, 'books', $books_field);
   }
 }
 
