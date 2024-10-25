@@ -18,11 +18,11 @@ function vtv_log($string)
   file_put_contents(__DIR__ . '/vtv.log', json_encode($string) . "\n", FILE_APPEND);
 }
 
-define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip'));
-define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')));
+define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip') ?? "yes");
+define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')) ?? []);
 define('IP_BLOCKED_MESSAGE', 'Din IP-adress har blockerats.');
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
-define('VOTATION_FORM_IDS', json_decode(get_option('vt_votation_forminator_form_ids')));
+define('VOTATION_FORM_IDS', json_decode(get_option('vt_votation_forminator_form_ids')) ?? []);
 
 register_activation_hook(
   __FILE__,
