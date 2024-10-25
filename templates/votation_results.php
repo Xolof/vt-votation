@@ -19,6 +19,7 @@ function cmp($a, $b)
 }
 
 uasort($votation_results_db, 'cmp');
+uasort($votes_per_ip_results_db, 'cmp');
 
 ?>
 
