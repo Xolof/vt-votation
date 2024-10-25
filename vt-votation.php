@@ -18,10 +18,9 @@ function vtv_log($string)
   file_put_contents(__DIR__ . '/vtv.log', json_encode($string) . "\n", FILE_APPEND);
 }
 
-define('VOTATION_PAGE_ID', get_option('vt_votation_page'));
-define('DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP', false);
+define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip'));
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
-define('VOTATION_PAGE_TITLE', 'Årets olämpligaste barnbok 2024');
+define('VOTATION_FORM_IDS', json_decode(get_option('vt_votation_forminator_form_ids')));
 
 register_activation_hook(
   __FILE__,
@@ -32,13 +31,9 @@ register_deactivation_hook(
   'vtv_deactivate'
 );
 
-function vtv_activate()
-{
-}
+function vtv_activate() {}
 
-function vtv_deactivate()
-{
-}
+function vtv_deactivate() {}
 
 function my_admin_page()
 {
@@ -92,36 +87,42 @@ function render_votation_settings()
   require_once (__DIR__ . '/templates/votation_settings.php');
 }
 
-add_action('admin_post_vtv_form_response', 'the_form_response');
+add_action('admin_post_vtv_form_response', 'process_settings');
 
-function the_form_response()
+function process_settings()
 {
   if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
-    $votation_page = $_POST['vtv']['votation_page'];
-    $votation_forminator_form = $_POST['vtv']['votation_forminator_form'];
-
-    if (!is_numeric($votation_page) || !is_numeric($votation_forminator_form)) {
-      exit('Invalid form data');
+    $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
+    foreach ($votation_forminator_form_ids as $form_id) {
+      if (!is_numeric($form_id)) {
+        exit('Invalid form data');
+      }
     }
 
     $result = false;
 
-    if (!get_option('vt_votation_page')) {
-      $result = add_option('vt_votation_page', $votation_page, '', 'no');
-    } else if (get_option('vt_votation_page') != $votation_page) {
-      $result = update_option('vt_votation_page', $votation_page, '', 'no');
+    if (!get_option('vt_votation_forminator_form_ids')) {
+      $result = add_option('vt_votation_forminator_form_ids', json_encode($votation_forminator_form_ids), '', 'no');
+    } else if (json_decode(get_option('vt_votation_forminator_form_ids')) != $votation_forminator_form_ids) {
+      $result = update_option('vt_votation_forminator_form_ids', json_encode($votation_forminator_form_ids), '', 'no');
     } else {
       // Nothing to update
       $result = true;
     }
 
-    if (!get_option('vt_votation_forminator_form')) {
-      $result = add_option('vt_votation_forminator_form', $votation_forminator_form, '', 'no');
-    } else if (get_option('vt_votation_forminator_form') != $votation_forminator_form) {
-      $result = update_option('vt_votation_forminator_form', $votation_forminator_form, '', 'no');
-    } else {
-      // Nothing to update
-      $result = true;
+    $allow_multiple_votes_from_same_ip = $_POST['allow_multiple_votes_from_same_ip'];
+    if (isset($allow_multiple_votes_from_same_ip)) {
+      if (!in_array($allow_multiple_votes_from_same_ip, ['yes', 'no'])) {
+        exit('option update failed');
+      }
+      if (!get_option('allow_multiple_votes_from_same_ip')) {
+        $result = add_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip, '', 'no');
+      } else if (get_option('allow_multiple_votes_from_same_ip') != $allow_multiple_votes_from_same_ip) {
+        $result = update_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip, '', 'no');
+      } else {
+        // Nothing to update
+        $result = true;
+      }
     }
 
     if ($result == false) {
@@ -176,60 +177,81 @@ function print_plugin_admin_notices()
 
 add_action('admin_notices', 'print_plugin_admin_notices');
 
+function get_votation_form_id_placeholders()
+{
+  $votation_form_id_placeholders = '';
+  foreach (VOTATION_FORM_IDS as $id) {
+    $votation_form_id_placeholders .= '%d,';
+  }
+  return rtrim($votation_form_id_placeholders, ',');
+}
+
 function render_votation_results()
 {
+  if (!VOTATION_FORM_IDS) {
+    require_once (__DIR__ . '/templates/votation_results.php');
+    return;
+  }
   global $wpdb;
+  $votation_form_id_placeholders = get_votation_form_id_placeholders();
   $votation_result_query = <<<EOD
       SELECT
-        meta_value as books,
-        COUNT(*) as num_votes
+        form_id, COUNT(*) as num_votes,
+        SUBSTRING_INDEX(
+          SUBSTRING_INDEX(wp_postmeta.meta_value, 'formName";s:5:"', -1),
+          '";s:7:"version";',
+          1
+        ) as book    
       FROM wp_frmt_form_entry
-      LEFT JOIN wp_frmt_form_entry_meta
-      USING(entry_id)
-      WHERE
-        form_id = %d AND meta_key="books"
-     GROUP BY meta_value;
+        LEFT JOIN wp_frmt_form_entry_meta
+          USING(entry_id)
+        LEFT JOIN wp_postmeta
+          ON post_id=form_id 
+        WHERE
+          form_id IN ($votation_form_id_placeholders)
+          AND wp_frmt_form_entry_meta.meta_key="email-1"
+        GROUP BY form_id
+      ;
     EOD;
   $votation_results_db = $wpdb->get_results(
     $wpdb->prepare(
       $votation_result_query,
-      VOTATION_FORM_ID
+      VOTATION_FORM_IDS
     )
   );
-  $votation_results_array = [];
   require_once (__DIR__ . '/templates/votation_results.php');
 }
 
-function checkIfEmailHasAlreadyVoted($email)
+function checkIfEmailHasAlreadyVoted($email, $form_id)
 {
   global $wpdb;
   $email_already_voted_query = <<<EOD
-      SELECT
-        EXISTS(
-          SELECT meta_value
+    SELECT
+      EXISTS(
+        SELECT meta_value
           FROM wp_frmt_form_entry
-           LEFT JOIN wp_frmt_form_entry_meta
-           USING(entry_id)
-           WHERE meta_key="email-1"
-           AND form_id=%d AND meta_value="%s"
-        ) as email_already_voted;
+          LEFT JOIN wp_frmt_form_entry_meta
+            USING(entry_id)
+            WHERE meta_key="email-1"
+              AND form_id = %d
+              AND meta_value="%s"
+      ) as email_already_voted;
     EOD;
   $result = $wpdb->get_results(
     $wpdb->prepare(
       $email_already_voted_query,
-      VOTATION_FORM_ID,
-      $email
+      [$form_id, $email]
     )
   );
   return $result;
 }
 
 add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
-  if (intval($form_id) == VOTATION_FORM_ID) {
+  if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     $user_ip = Forminator_Geo::get_user_ip();
     file_put_contents(__DIR__ . '/votation-ip.log', date('Y-m-d H:i:s') . ' ' . $user_ip . "\n", FILE_APPEND);
-    $email = $field_data_array[1]['value'];
-    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email);
+    $email = $field_data_array[0]['value'];
+    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
     if ($email_already_voted_result[0]->email_already_voted == '1') {
       $submit_errors[] = ONLY_VOTE_ONE_TIME_MESSAGE;
     };
@@ -238,9 +260,9 @@ add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $fo
 }, 15, 3);
 
 add_filter('forminator_custom_form_invalid_form_message', function ($invalid_form_message, $form_id) {
-  if ($form_id == VOTATION_FORM_ID) {
+  if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     $email = $_POST['email-1'];
-    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email);
+    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
     if ($email_already_voted_result[0]->email_already_voted == '1') {
       $invalid_form_message = ONLY_VOTE_ONE_TIME_MESSAGE;
     };
@@ -249,12 +271,11 @@ add_filter('forminator_custom_form_invalid_form_message', function ($invalid_for
   return $invalid_form_message;
 }, 10, 3);
 
-if (DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP == true) {
+if (ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no') {
   add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
-    $message = __('Du kan bara rösta en gång.', 'forminator');
-    if (intval($form_id) == VOTATION_FORM_ID) {
+    $message = __('Du kan bara rösta en gång!', 'forminator');
+    if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
       $user_ip = Forminator_Geo::get_user_ip();
-      file_put_contents(__DIR__ . '/votation-ip.log', date('Y-m-d H:i:s') . ' ' . $user_ip . "\n", FILE_APPEND);
       if (!empty($user_ip)) {
         $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
         if (!empty($last_entry)) {
@@ -266,14 +287,14 @@ if (DISALLOW_MULTIPLE_VOTES_FROM_SAME_IP == true) {
   }, 15, 3);
 
   add_filter('forminator_custom_form_invalid_form_message', function ($invalid_form_message, $form_id) {
-    if ($form_id != VOTATION_FORM_ID) {
+    if (!in_array(intval($form_id), VOTATION_FORM_IDS)) {
       return $invalid_form_message;
     }
     $user_ip = Forminator_Geo::get_user_ip();
     if (!empty($user_ip)) {
       $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
       if (!empty($last_entry)) {
-        $invalid_form_message = __('Du kan bara rösta en gång.', 'forminator');
+        $invalid_form_message = __('Du kan bara rösta en gång!', 'forminator');
       }
     }
     return $invalid_form_message;
