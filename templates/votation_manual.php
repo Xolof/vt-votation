@@ -12,4 +12,5 @@ if (!defined('ABSPATH')) {
   <li>Sammanställer resultat från omröstning och visar upp i admin.</li>
   <li>Tar endast emot en röst per epostadress.</li>
   <li>Gör det möjligt att endast tillåta en inlämning per IP-adress.</li>
+  <li>Möjliggör blockering av IP-adresser.</li>
 </ul>
