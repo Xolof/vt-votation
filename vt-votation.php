@@ -20,7 +20,7 @@ function vtv_log($string)
 
 define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip'));
 define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')));
-define('IP_BLOCKED_MESSAGE', "Din IP-adress har blockerats.");
+define('IP_BLOCKED_MESSAGE', 'Din IP-adress har blockerats.');
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
 define('VOTATION_FORM_IDS', json_decode(get_option('vt_votation_forminator_form_ids')));
 
@@ -97,18 +97,18 @@ function process_settings()
     $result = false;
 
     $blocked_ips = $_POST['blocked_ips'] ?? [];
-    if (gettype($blocked_ips) != "string") {
-      exit("Invalid IP value submitted. Blocked IPs should be a string."); 
+    if (gettype($blocked_ips) != 'string') {
+      exit('Invalid IP value submitted. Blocked IPs should be a string.');
     }
 
-    $blocked_ips = explode(",", $blocked_ips);
-    if ($blocked_ips[0] != "") {
+    $blocked_ips = explode(',', $blocked_ips);
+    if ($blocked_ips[0] != '') {
       foreach ($blocked_ips as $ip) {
         if (
           !(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
-          filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+            filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
         ) {
-          exit("Invalid IP value submitted. Blocked IPs should be a comma separated list of IP addresses.");
+          exit('Invalid IP value submitted. Blocked IPs should be a comma separated list of IP addresses.');
         }
       }
     }
@@ -121,7 +121,7 @@ function process_settings()
       // Nothing to update
       $result = true;
     }
-    
+
     $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
     foreach ($votation_forminator_form_ids as $form_id) {
       if (!is_numeric($form_id)) {
@@ -297,7 +297,7 @@ function checkIfEmailHasAlreadyVoted($email, $form_id)
 add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     $user_ip = Forminator_Geo::get_user_ip();
-    if(in_array($user_ip, IP_BLOCK_LIST)) {
+    if (in_array($user_ip, IP_BLOCK_LIST)) {
       $submit_errors[] = IP_BLOCKED_MESSAGE;
     }
 
@@ -312,9 +312,8 @@ add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $fo
 
 add_filter('forminator_custom_form_invalid_form_message', function ($invalid_form_message, $form_id) {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
-
     $user_ip = Forminator_Geo::get_user_ip();
-    if(in_array($user_ip, IP_BLOCK_LIST)) {
+    if (in_array($user_ip, IP_BLOCK_LIST)) {
       return IP_BLOCKED_MESSAGE;
     }
 

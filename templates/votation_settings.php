@@ -47,7 +47,7 @@ $existing_votation_form_ids = VOTATION_FORM_IDS;
           name="blocked_ips" 
           rows="5" 
           cols="35"
-        ><?= htmlentities(implode(",", IP_BLOCK_LIST)) ?></textarea>
+        ><?= htmlentities(implode(',', IP_BLOCK_LIST)) ?></textarea>
       </fieldset>
       <br>
       <input type="hidden" name="action" value="vtv_form_response" />
