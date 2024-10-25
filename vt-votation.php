@@ -95,6 +95,13 @@ function render_votation_results()
     require_once (__DIR__ . '/templates/votation_results.php');
     return;
   }
+  $votation_results_db = get_votation_results();
+  $votes_per_ip_results_db = get_votes_per_ip_results();
+  require_once (__DIR__ . '/templates/votation_results.php');
+}
+
+function get_votation_results()
+{
   global $wpdb;
   $votation_form_id_placeholders = get_votation_form_id_placeholders();
   $votation_result_query = <<<EOD
@@ -116,13 +123,18 @@ function render_votation_results()
         GROUP BY form_id
       ;
     EOD;
-  $votation_results_db = $wpdb->get_results(
+  return $wpdb->get_results(
     $wpdb->prepare(
       $votation_result_query,
       VOTATION_FORM_IDS
     )
   );
+}
 
+function get_votes_per_ip_results()
+{
+  global $wpdb;
+  $votation_form_id_placeholders = get_votation_form_id_placeholders();
   $votes_per_ip_query = <<<EOD
       SELECT
       wp_frmt_form_entry_meta.meta_value as IP_address,
@@ -135,29 +147,27 @@ function render_votation_results()
             AND wp_frmt_form_entry_meta.meta_key="_forminator_user_ip"
           GROUP BY IP_address;
     EOD;
-  $votes_per_ip_results_db = $wpdb->get_results(
+  return $wpdb->get_results(
     $wpdb->prepare(
       $votes_per_ip_query,
       VOTATION_FORM_IDS
     )
   );
-
-  require_once (__DIR__ . '/templates/votation_results.php');
 }
 
 add_action('admin_post_vtv_form_response', 'process_settings');
 
 function vtv_process_option($option_name, $post_data)
 {
-    if (!get_option($option_name)) {
-      $result = add_option($option_name, json_encode($post_data), '', 'no');
-    } else if (json_decode(get_option($option_name)) != $post_data) {
-      $result = update_option($option_name, json_encode($post_data), '', 'no');
-    } else {
-      // Nothing to update
-      $result = true;
-    }
-    return $result;
+  if (!get_option($option_name)) {
+    $result = add_option($option_name, json_encode($post_data), '', 'no');
+  } else if (json_decode(get_option($option_name)) != $post_data) {
+    $result = update_option($option_name, json_encode($post_data), '', 'no');
+  } else {
+    // Nothing to update
+    $result = true;
+  }
+  return $result;
 }
 
 function process_settings()
@@ -181,8 +191,8 @@ function process_settings()
         }
       }
     }
-    
-    $result = vtv_process_option("vt_votation_blocked_ips", $blocked_ips);
+
+    $result = vtv_process_option('vt_votation_blocked_ips', $blocked_ips);
 
     $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
     foreach ($votation_forminator_form_ids as $form_id) {
@@ -191,7 +201,7 @@ function process_settings()
       }
     }
 
-    $result = vtv_process_option("vt_votation_forminator_form_ids", $votation_forminator_form_ids);
+    $result = vtv_process_option('vt_votation_forminator_form_ids', $votation_forminator_form_ids);
 
     $allow_multiple_votes_from_same_ip = $_POST['allow_multiple_votes_from_same_ip'];
     if (isset($allow_multiple_votes_from_same_ip)) {
@@ -199,7 +209,7 @@ function process_settings()
         exit('option update failed');
       }
 
-      $result = vtv_process_option("allow_multiple_votes_from_same_ip", $allow_multiple_votes_from_same_ip);
+      $result = vtv_process_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip);
     }
 
     if ($result == false) {
@@ -322,15 +332,15 @@ add_filter('forminator_custom_form_invalid_form_message', function ($invalid_for
 
 function getSameIPErrorMessage($form_id)
 {
-    $message = null;
-    $user_ip = Forminator_Geo::get_user_ip();
-    if (!empty($user_ip)) {
-      $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
-      if (!empty($last_entry)) {
-        $message = 'Du kan bara rösta en gång!';
-      }
+  $message = null;
+  $user_ip = Forminator_Geo::get_user_ip();
+  if (!empty($user_ip)) {
+    $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
+    if (!empty($last_entry)) {
+      $message = 'Du kan bara rösta en gång!';
     }
-    return $message;
+  }
+  return $message;
 }
 
 if (ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no') {
