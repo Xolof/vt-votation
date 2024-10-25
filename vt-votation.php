@@ -18,7 +18,7 @@ function vtv_log($string)
   file_put_contents(__DIR__ . '/vtv.log', json_encode($string) . "\n", FILE_APPEND);
 }
 
-define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip') ?? "yes");
+define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip') ?? 'yes');
 define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')) ?? []);
 define('IP_BLOCKED_MESSAGE', 'Din IP-adress har blockerats.');
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
@@ -327,17 +327,27 @@ add_filter('forminator_custom_form_invalid_form_message', function ($invalid_for
   return $invalid_form_message;
 }, 10, 3);
 
+function getSameIPErrorMessage($form_id)
+{
+    $message = null;
+    $user_ip = Forminator_Geo::get_user_ip();
+    if (!empty($user_ip)) {
+      $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
+      if (!empty($last_entry)) {
+        $message = 'Du kan bara rösta en gång!';
+      }
+    }
+    return $message;
+}
+
 if (ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no') {
   add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
-    $message = __('Du kan bara rösta en gång!', 'forminator');
-    if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
-      $user_ip = Forminator_Geo::get_user_ip();
-      if (!empty($user_ip)) {
-        $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
-        if (!empty($last_entry)) {
-          $submit_errors[]['submit'] = $message;
-        }
-      }
+    if (!in_array(intval($form_id), VOTATION_FORM_IDS)) {
+      return $submit_errors;
+    }
+    $message = getSameIPErrorMessage($form_id);
+    if ($message) {
+      $submit_errors[]['submit'] = $message;
     }
     return $submit_errors;
   }, 15, 3);
@@ -346,12 +356,9 @@ if (ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no') {
     if (!in_array(intval($form_id), VOTATION_FORM_IDS)) {
       return $invalid_form_message;
     }
-    $user_ip = Forminator_Geo::get_user_ip();
-    if (!empty($user_ip)) {
-      $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
-      if (!empty($last_entry)) {
-        $invalid_form_message = __('Du kan bara rösta en gång!', 'forminator');
-      }
+    $message = getSameIPErrorMessage($form_id);
+    if ($message) {
+      return $message;
     }
     return $invalid_form_message;
   }, 10, 2);
