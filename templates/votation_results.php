@@ -2,46 +2,63 @@
 if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
+
 ?>
-<h1><?= __('Resultat', 'my-textdomain'); ?></h1>
+<h1>Resultat</h1>
 <?php
-foreach ($votation_results_db as $result) {
-  $num_votes = $result->num_votes;
-  $books = unserialize($result->books);
-  for ($i = 0; $i < $num_votes; $i++) {
-    foreach ($books as $book) {
-      $book = ucfirst(str_replace("-", " ", $book));
-      if (!array_key_exists($book, $votation_results_array)) {
-        $votation_results_array[$book] = 1;
-      } else {
-        $votation_results_array[$book] += 1;
-      }
-    }
+
+$votation_results_db = $votation_results_db ?? [];
+
+function cmp($a, $b)
+{
+  if ($a == $b) {
+    return 0;
   }
+  return ($a->num_votes > $b->num_votes) ? -1 : 1;
 }
-arsort($votation_results_array);
+
+uasort($votation_results_db, 'cmp');
+
 ?>
+
+<?php if (!count(VOTATION_FORM_IDS)): ?>
+  <p>
+    Inga formulär har valts.&nbsp
+     <a href="/wp/wp-admin/admin.php?page=render_votation_settings">Välj formulär i inställningarna.</a> 
+  </p>
+<?php endif; ?>
+
+<?php if (!count($votation_results_db)): ?>
+  <p>Det har ännu inte kommit in några röster.</p>
+<?php endif; ?>
+
+<?php if (count($votation_results_db)): ?>
 <div class="wrap">
 <table class="widefat striped">
   <tr>
     <th><b>Placering</b></th>
-    <th><b><?= __('Bok', 'my-textdomain') ?></b></th>
-    <th><b><?= __('Antal röster', 'my-textdomain') ?></b></th>
+    <th><b>Bok</b></th>
+    <th><b>Antal röster</b></th>
+    <th><b>Formulär</b></th>
   </tr>
   <?php $index = 1; ?>
-  <?php foreach ($votation_results_array as $book => $num_votes): ?>
+  <?php foreach ($votation_results_db as $result): ?>
     <tr>
       <td>
         <?= $index ?>
       </td>
       <td>
-        <?= htmlentities(__($book, 'my-textdomain')) ?>
+        <?= htmlentities(__($result->book, 'my-textdomain')) ?>
       </td>
       <td>    
-        <?= $num_votes ?>
+        <?= htmlentities($result->num_votes) ?>
       </td>  
+      <td>
+        <?= htmlentities(__($result->form_id, 'my-textdomain')) ?>
+      </td>
     </tr>
         <?php $index++?>
   <?php endforeach; ?>
 </table>
 </div>
+<?php endif; ?>
