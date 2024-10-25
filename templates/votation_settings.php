@@ -3,13 +3,11 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-$existing_votation_page_id = VOTATION_PAGE_ID;
-$existing_votation_form_id = VOTATION_FORM_ID;
+$existing_votation_form_ids = VOTATION_FORM_IDS;
+
 ?>
 
 <h1><?= __('Inställningar', 'my-textdomain'); ?></h1>
-
-<?php $vt_votation_plugin_name = 'vt-votation'; ?>
 
 <?php if (current_user_can('manage_options')): ?>
   <?php $vtv_add_meta_nonce = wp_create_nonce('vtv_add_user_meta_form_nonce'); ?>        
@@ -19,31 +17,34 @@ $existing_votation_form_id = VOTATION_FORM_ID;
       method="post"
       id="vtv_add_user_meta_form"
     >      
-      <label for="vtv_votation_page">Sida för omröstning</label>
-      <br>
-      <select required id="vtv_votation_page" name="vtv[votation_page]">
-        <option value="">Välj en sida</option>
-        <?php foreach ($vt_votation_pages as $page): ?>
-          <option value="<?= $page->ID ?>" <?= $existing_votation_page_id == $page->ID ? 'selected' : null ?>><?= $page->post_title ?></option>
-        <?php endforeach; ?>
-      </select>
-      <br>
-      <br>
-      <label for="vtv_votation_forminator_form">Formulär för omröstning</label>
-      <br>
-      <select required id="vtv_votation_forminator_form" name="vtv[votation_forminator_form]">
-        <option value="">Välj ett formulär</option>
+      <fieldset>
+        <legend>Formulär för omröstning</legend>
         <?php foreach ($vt_votation_forminator_forms as $form): ?>
-          <option value="<?= $form->id ?>" <?= $existing_votation_form_id == $form->id ? 'selected' : null ?>><?= $form->settings['formName'] ?></option>
+          <div>
+            <input
+              type="checkbox"
+              id="<?= htmlentities($form->id) ?>"
+              name="books[<?= htmlentities($form->id) ?>]"
+              <?= in_array($form->id, $existing_votation_form_ids) ? 'checked' : null ?>
+            />
+            <label for="<?= htmlentities($form->id) ?>"><?= htmlentities($form->settings['formName']) ?></label>
+          </div>
         <?php endforeach; ?>
-      </select>
+      </fieldset>
       <br>
+      <fieldset>
+        <legend>Tillåt flera inlämningar från samma IP-adress</legend>
+        <select name="allow_multiple_votes_from_same_ip" id="allow_multiple_votes_from_same_ip">
+        <option value="yes" <?= ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'yes' ? 'selected' : null ?>>Ja</option>
+        <option value="no" <?= ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no' ? 'selected' : null ?>>Nej</option> 
+      </select> 
+      </fieldset>
       <br>
-      <input type="hidden" name="action" value="vtv_form_response">
-      <input type="hidden" name="vtv_add_user_meta_nonce" value="<?= $vtv_add_meta_nonce ?>" />
-      <input type="submit" name="submit" id="submit" class="button button-primary" value="Spara">
+      <input type="hidden" name="action" value="vtv_form_response" />
+      <input type="hidden" name="vtv_add_user_meta_nonce" value="<?= htmlentities($vtv_add_meta_nonce) ?>" />
+      <input type="submit" name="submit" id="submit" class="button button-primary" value="Spara" />
     </form>
   </div>
 <?php else: ?>
-  <p><?php __('You are not authorized to perform this operation.', $vt_votation_plugin_name) ?></p>
+  <p><?php 'You are not authorized to perform this operation.' ?></p>
 <?php endif; ?>
