@@ -34,6 +34,7 @@ uasort($votation_results_db, 'cmp');
 <?php endif; ?>
 
 <?php if (count($votation_results_db)): ?>
+<h2>Antal röster per bok</h2>
 <div class="wrap">
 <table class="widefat striped">
   <tr>
@@ -65,6 +66,7 @@ uasort($votation_results_db, 'cmp');
 <?php endif; ?>
 
 <?php if (count($votes_per_ip_results_db)): ?>
+<h2>Antal röster per IP-adress</h2>
 <div class="wrap">
 <table class="widefat striped">
   <tr>
