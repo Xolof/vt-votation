@@ -19,6 +19,8 @@ function vtv_log($string)
 }
 
 define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip'));
+define('IP_BLOCK_LIST', ["172.18.0.1", "172.18.0.2"]);
+define('IP_BLOCKED_MESSAGE', "Din IP-adress har blockerats.");
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
 define('VOTATION_FORM_IDS', json_decode(get_option('vt_votation_forminator_form_ids')));
 
@@ -269,7 +271,10 @@ function checkIfEmailHasAlreadyVoted($email, $form_id)
 add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     $user_ip = Forminator_Geo::get_user_ip();
-    file_put_contents(__DIR__ . '/votation-ip.log', date('Y-m-d H:i:s') . ' ' . $user_ip . "\n", FILE_APPEND);
+    if(in_array($user_ip, IP_BLOCK_LIST)) {
+      $submit_errors[] = IP_BLOCKED_MESSAGE;
+    }
+
     $email = $field_data_array[0]['value'];
     $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
     if ($email_already_voted_result[0]->email_already_voted == '1') {
@@ -281,6 +286,12 @@ add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $fo
 
 add_filter('forminator_custom_form_invalid_form_message', function ($invalid_form_message, $form_id) {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
+
+    $user_ip = Forminator_Geo::get_user_ip();
+    if(in_array($user_ip, IP_BLOCK_LIST)) {
+      return IP_BLOCKED_MESSAGE;
+    }
+
     $email = $_POST['email-1'];
     $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
     if ($email_already_voted_result[0]->email_already_voted == '1') {
