@@ -291,7 +291,7 @@ function checkIfEmailHasAlreadyVoted($email, $form_id)
       [$form_id, $email]
     )
   );
-  return $result;
+  return $result[0]->email_already_voted;
 }
 
 add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $form_id, $field_data_array) {
@@ -303,7 +303,7 @@ add_filter('forminator_custom_form_submit_errors', function ($submit_errors, $fo
 
     $email = $field_data_array[0]['value'];
     $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
-    if ($email_already_voted_result[0]->email_already_voted == '1') {
+    if ($email_already_voted_result == '1') {
       $submit_errors[] = ONLY_VOTE_ONE_TIME_MESSAGE;
     };
   }
@@ -319,7 +319,7 @@ add_filter('forminator_custom_form_invalid_form_message', function ($invalid_for
 
     $email = $_POST['email-1'];
     $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
-    if ($email_already_voted_result[0]->email_already_voted == '1') {
+    if ($email_already_voted_result == '1') {
       $invalid_form_message = ONLY_VOTE_ONE_TIME_MESSAGE;
     };
     return $invalid_form_message;
