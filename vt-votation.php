@@ -98,8 +98,9 @@ function process_settings()
 
     $blocked_ips = $_POST['blocked_ips'] ?? [];
     if (gettype($blocked_ips) != "string") {
-      exit("Invalid IP value submitted"); 
+      exit("Invalid IP value submitted. Blocked IPs should be a string."); 
     }
+
     $blocked_ips = explode(",", $blocked_ips);
     if ($blocked_ips[0] != "") {
       foreach ($blocked_ips as $ip) {
@@ -107,7 +108,7 @@ function process_settings()
           !(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
           filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
         ) {
-          exit("Invalid IP value submitted");
+          exit("Invalid IP value submitted. Blocked IPs should be a comma separated list of IP addresses.");
         }
       }
     }
