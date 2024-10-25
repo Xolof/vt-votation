@@ -37,7 +37,17 @@ $existing_votation_form_ids = VOTATION_FORM_IDS;
         <select name="allow_multiple_votes_from_same_ip" id="allow_multiple_votes_from_same_ip">
         <option value="yes" <?= ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'yes' ? 'selected' : null ?>>Ja</option>
         <option value="no" <?= ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no' ? 'selected' : null ?>>Nej</option> 
-      </select> 
+        </select> 
+      </fieldset>
+      <br>
+      <fieldset>
+        <legend>Blockerade IP-adresser. Ange en kommaseparerad lista med IP-adresser.</legend>
+        <textarea 
+          id="blocked_ips" 
+          name="blocked_ips" 
+          rows="5" 
+          cols="35"
+        ><?= htmlentities(implode(",", IP_BLOCK_LIST)) ?></textarea>
       </fieldset>
       <br>
       <input type="hidden" name="action" value="vtv_form_response" />
@@ -48,3 +58,9 @@ $existing_votation_form_ids = VOTATION_FORM_IDS;
 <?php else: ?>
   <p><?php 'You are not authorized to perform this operation.' ?></p>
 <?php endif; ?>
+
+<style>
+.vtv_add_user_meta_form input[type=checkbox] {
+  margin-top: 4px;
+}
+</style>

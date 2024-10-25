@@ -19,7 +19,7 @@ function vtv_log($string)
 }
 
 define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip'));
-define('IP_BLOCK_LIST', ["172.18.0.1", "172.18.0.2"]);
+define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')));
 define('IP_BLOCKED_MESSAGE', "Din IP-adress har blockerats.");
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
 define('VOTATION_FORM_IDS', json_decode(get_option('vt_votation_forminator_form_ids')));
@@ -94,14 +94,39 @@ add_action('admin_post_vtv_form_response', 'process_settings');
 function process_settings()
 {
   if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
+    $result = false;
+
+    $blocked_ips = $_POST['blocked_ips'] ?? [];
+    if (gettype($blocked_ips) != "string") {
+      exit("Invalid IP value submitted"); 
+    }
+    $blocked_ips = explode(",", $blocked_ips);
+    if ($blocked_ips[0] != "") {
+      foreach ($blocked_ips as $ip) {
+        if (
+          !(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
+          filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+        ) {
+          exit("Invalid IP value submitted");
+        }
+      }
+    }
+
+    if (!get_option('vt_votation_blocked_ips')) {
+      $result = add_option('vt_votation_blocked_ips', json_encode($blocked_ips), '', 'no');
+    } else if (json_decode(get_option('vt_votation_blocked_ips')) != $blocked_ips) {
+      $result = update_option('vt_votation_blocked_ips', json_encode($blocked_ips), '', 'no');
+    } else {
+      // Nothing to update
+      $result = true;
+    }
+    
     $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
     foreach ($votation_forminator_form_ids as $form_id) {
       if (!is_numeric($form_id)) {
         exit('Invalid form data');
       }
     }
-
-    $result = false;
 
     if (!get_option('vt_votation_forminator_form_ids')) {
       $result = add_option('vt_votation_forminator_form_ids', json_encode($votation_forminator_form_ids), '', 'no');

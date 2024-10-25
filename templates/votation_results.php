@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 <?php
 
 $votation_results_db = $votation_results_db ?? [];
+$votes_per_ip_results_db = $votes_per_ip_results_db ?? [];
 
 function cmp($a, $b)
 {
