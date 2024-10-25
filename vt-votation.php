@@ -18,7 +18,7 @@ function vtv_log($string)
   file_put_contents(__DIR__ . '/vtv.log', json_encode($string) . "\n", FILE_APPEND);
 }
 
-define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', get_option('allow_multiple_votes_from_same_ip') ?? 'yes');
+define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', json_decode(get_option('allow_multiple_votes_from_same_ip')) ?? 'yes');
 define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')) ?? []);
 define('IP_BLOCKED_MESSAGE', 'Din IP-adress har blockerats.');
 define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
@@ -91,6 +91,19 @@ function render_votation_settings()
 
 add_action('admin_post_vtv_form_response', 'process_settings');
 
+function vtv_process_option($option_name, $post_data)
+{
+    if (!get_option($option_name)) {
+      $result = add_option($option_name, json_encode($post_data), '', 'no');
+    } else if (json_decode(get_option($option_name)) != $post_data) {
+      $result = update_option($option_name, json_encode($post_data), '', 'no');
+    } else {
+      // Nothing to update
+      $result = true;
+    }
+    return $result;
+}
+
 function process_settings()
 {
   if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
@@ -112,15 +125,8 @@ function process_settings()
         }
       }
     }
-
-    if (!get_option('vt_votation_blocked_ips')) {
-      $result = add_option('vt_votation_blocked_ips', json_encode($blocked_ips), '', 'no');
-    } else if (json_decode(get_option('vt_votation_blocked_ips')) != $blocked_ips) {
-      $result = update_option('vt_votation_blocked_ips', json_encode($blocked_ips), '', 'no');
-    } else {
-      // Nothing to update
-      $result = true;
-    }
+    
+    $result = vtv_process_option("vt_votation_blocked_ips", $blocked_ips);
 
     $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
     foreach ($votation_forminator_form_ids as $form_id) {
@@ -129,28 +135,15 @@ function process_settings()
       }
     }
 
-    if (!get_option('vt_votation_forminator_form_ids')) {
-      $result = add_option('vt_votation_forminator_form_ids', json_encode($votation_forminator_form_ids), '', 'no');
-    } else if (json_decode(get_option('vt_votation_forminator_form_ids')) != $votation_forminator_form_ids) {
-      $result = update_option('vt_votation_forminator_form_ids', json_encode($votation_forminator_form_ids), '', 'no');
-    } else {
-      // Nothing to update
-      $result = true;
-    }
+    $result = vtv_process_option("vt_votation_forminator_form_ids", $votation_forminator_form_ids);
 
     $allow_multiple_votes_from_same_ip = $_POST['allow_multiple_votes_from_same_ip'];
     if (isset($allow_multiple_votes_from_same_ip)) {
       if (!in_array($allow_multiple_votes_from_same_ip, ['yes', 'no'])) {
         exit('option update failed');
       }
-      if (!get_option('allow_multiple_votes_from_same_ip')) {
-        $result = add_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip, '', 'no');
-      } else if (get_option('allow_multiple_votes_from_same_ip') != $allow_multiple_votes_from_same_ip) {
-        $result = update_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip, '', 'no');
-      } else {
-        // Nothing to update
-        $result = true;
-      }
+
+      $result = vtv_process_option("allow_multiple_votes_from_same_ip", $allow_multiple_votes_from_same_ip);
     }
 
     if ($result == false) {
