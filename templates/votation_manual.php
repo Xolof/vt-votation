@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<h1><?= __('Manual', 'my-textdomain'); ?></h1>
+<h1>Manual</h1>
 <h3>Syfte</h3>
 <p>Tanken med pluginet är att förhindra spam och sammanställa resultaten från omröstningen.</p>
 <h3>Funktionalitet</h3>
