@@ -2,9 +2,10 @@
 if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
-
 ?>
+
 <h1>Resultat</h1>
+
 <?php
 
 $votation_results_db = $votation_results_db ?? [];
@@ -58,6 +59,27 @@ uasort($votation_results_db, 'cmp');
       </td>
     </tr>
         <?php $index++?>
+  <?php endforeach; ?>
+</table>
+</div>
+<?php endif; ?>
+
+<?php if (count($votes_per_ip_results_db)): ?>
+<div class="wrap">
+<table class="widefat striped">
+  <tr>
+    <th><b>IP</b></th>
+    <th><b>Antal röster</b></th>
+  </tr>
+  <?php foreach ($votes_per_ip_results_db as $result): ?>
+    <tr>
+      <td>
+        <?= htmlentities($result->IP_address) ?>
+      </td>
+      <td>
+        <?= htmlentities($result->num_votes) ?>
+      </td>
+    </tr>
   <?php endforeach; ?>
 </table>
 </div>

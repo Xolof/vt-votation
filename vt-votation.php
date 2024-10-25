@@ -219,6 +219,26 @@ function render_votation_results()
       VOTATION_FORM_IDS
     )
   );
+
+  $votes_per_ip_query = <<<EOD
+      SELECT
+      wp_frmt_form_entry_meta.meta_value as IP_address,
+      COUNT(*) as num_votes
+        FROM wp_frmt_form_entry
+          LEFT JOIN wp_frmt_form_entry_meta
+            USING(entry_id)
+          WHERE
+            form_id IN ($votation_form_id_placeholders)
+            AND wp_frmt_form_entry_meta.meta_key="_forminator_user_ip"
+          GROUP BY IP_address;
+    EOD;
+  $votes_per_ip_results_db = $wpdb->get_results(
+    $wpdb->prepare(
+      $votes_per_ip_query,
+      VOTATION_FORM_IDS
+    )
+  );
+
   require_once (__DIR__ . '/templates/votation_results.php');
 }
 
