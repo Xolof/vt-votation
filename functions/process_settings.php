@@ -30,7 +30,11 @@ function vtv_process_settings()
           !(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
             filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
         ) {
-          exit('Invalid IP value submitted. Blocked IPs should be a comma separated list of IP addresses.');
+          vtv_custom_redirect(
+            'error',
+            'Invalid IP value submitted. Blocked IPs should be a comma separated list of IP addresses.'
+          );
+          exit;
         }
       }
     }
@@ -59,7 +63,7 @@ function vtv_process_settings()
       exit('option update failed');
     }
 
-    vtv_custom_redirect('success');
+    vtv_custom_redirect('success', "Inställningarna sparades");
     exit;
   } else {
     wp_die(
@@ -74,13 +78,14 @@ function vtv_process_settings()
   }
 }
 
-function vtv_custom_redirect($status)
+function vtv_custom_redirect($status, $message)
 {
   wp_redirect(
     esc_url_raw(
       add_query_arg(
         array(
-          'vtv_admin_add_notice' => $status
+          'vtv_admin_notice_status' => $status,
+          'vtv_admin_notice_message' => $message
         ),
         admin_url(
           'admin.php?page=render_votation_settings'
