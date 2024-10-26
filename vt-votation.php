@@ -23,7 +23,7 @@ define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', json_decode(get_option('allow_multip
 define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')) ?? []);
 define('VOTATION_FORM_IDS', json_decode(get_option('vt_votation_forminator_form_ids')) ?? []);
 define('IP_BLOCKED_MESSAGE', 'Din IP-adress har blockerats.');
-define('ONLY_VOTE_ONE_TIME_MESSAGE', __('Du kan bara rösta en gång.', 'forminator'));
+define('ONLY_VOTE_ONE_TIME_MESSAGE', 'Du kan bara rösta en gång.');
 
 register_activation_hook(
   __FILE__,
