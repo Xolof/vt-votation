@@ -32,7 +32,7 @@ function vtv_process_settings()
         ) {
           vtv_custom_redirect(
             'error',
-            'Invalid IP value submitted. Blocked IPs should be a comma separated list of IP addresses.'
+            'Ogiltigt värde för IP-adresser. Ange blockerade IP-adresser separerade med komma.'
           );
           exit;
         }
