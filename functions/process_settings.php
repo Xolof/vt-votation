@@ -63,7 +63,7 @@ function vtv_process_settings()
       exit('option update failed');
     }
 
-    vtv_custom_redirect('success', "Inställningarna sparades");
+    vtv_custom_redirect('success', 'Inställningarna sparades');
     exit;
   } else {
     wp_die(
