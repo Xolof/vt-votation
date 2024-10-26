@@ -37,7 +37,7 @@ function vtv_activate() {}
 
 function vtv_deactivate() {}
 
-function my_admin_page()
+function vtv_admin_page()
 {
   add_menu_page(
     'Årets olämpligaste barnbok',
@@ -75,7 +75,7 @@ function my_admin_page()
   remove_submenu_page('vt-votation', 'vt-votation');
 }
 
-add_action('admin_menu', 'my_admin_page');
+add_action('admin_menu', 'vtv_admin_page');
 
 function render_votation_manual()
 {
@@ -155,7 +155,7 @@ function get_votes_per_ip_results()
   );
 }
 
-add_action('admin_post_vtv_form_response', 'process_settings');
+add_action('admin_post_vtv_form_response', 'vtv_process_settings');
 
 function vtv_process_option($option_name, $post_data)
 {
@@ -170,7 +170,7 @@ function vtv_process_option($option_name, $post_data)
   return $result;
 }
 
-function process_settings()
+function vtv_process_settings()
 {
   if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
     $result = false;
@@ -216,7 +216,7 @@ function process_settings()
       exit('option update failed');
     }
 
-    custom_redirect('success');
+    vtv_custom_redirect('success');
     exit;
   } else {
     wp_die(
@@ -231,7 +231,7 @@ function process_settings()
   }
 }
 
-function custom_redirect($status)
+function vtv_custom_redirect($status)
 {
   wp_redirect(
     esc_url_raw(
