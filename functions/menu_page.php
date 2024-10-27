@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('ABSPATH')) {
+  exit;  // Exit if accessed directly.
+}
+
 function vtv_admin_page()
 {
   add_menu_page(

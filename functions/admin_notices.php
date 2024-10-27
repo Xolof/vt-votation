@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('ABSPATH')) {
+  exit;  // Exit if accessed directly.
+}
+
 function print_plugin_admin_notices()
 {
   $status = $_REQUEST['vtv_admin_notice_status'] ?? null;

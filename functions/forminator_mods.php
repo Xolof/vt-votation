@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('ABSPATH')) {
+  exit;  // Exit if accessed directly.
+}
+
 function vtv_forminator_submit_errors_block_and_email($submit_errors, $form_id, $field_data_array)
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {

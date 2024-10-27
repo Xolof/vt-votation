@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('ABSPATH')) {
+  exit;  // Exit if accessed directly.
+}
+
 function render_votation_manual()
 {
   require_once (__DIR__ . '/../templates/votation_manual.php');

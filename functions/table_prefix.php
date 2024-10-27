@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('ABSPATH')) {
+  exit;  // Exit if accessed directly.
+}
+
 function get_table_name_with_prefix($tablename_without_prefix)
 {
   global $wpdb;

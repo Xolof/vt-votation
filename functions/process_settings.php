@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('ABSPATH')) {
+  exit;  // Exit if accessed directly.
+}
+
 function vtv_process_option($option_name, $post_data)
 {
   if (!get_option($option_name)) {
