@@ -70,8 +70,8 @@ function checkIfEmailHasAlreadyVoted($email, $form_id)
     SELECT
       EXISTS(
         SELECT meta_value
-          FROM $frmt_form_entry
-          LEFT JOIN $frmt_form_entry_meta
+          FROM %i
+          LEFT JOIN %i
             USING(entry_id)
             WHERE meta_key="email-1"
               AND form_id = %d
@@ -81,7 +81,7 @@ function checkIfEmailHasAlreadyVoted($email, $form_id)
   $result = $wpdb->get_results(
     $wpdb->prepare(
       $email_already_voted_query,
-      [$form_id, $email]
+      [$frmt_form_entry, $frmt_form_entry_meta, $form_id, $email]
     )
   );
   return $result[0]->email_already_voted;

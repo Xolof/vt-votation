@@ -117,25 +117,32 @@ function get_votation_results()
       SELECT
         form_id, COUNT(*) as num_votes,
         SUBSTRING_INDEX(
-          SUBSTRING_INDEX($postmeta.meta_value, 'formName";s:5:"', -1),
+          SUBSTRING_INDEX(%i.meta_value, 'formName";s:5:"', -1),
           '";s:7:"version";',
           1
         ) as book    
-      FROM $frmt_form_entry
-        LEFT JOIN $frmt_form_entry_meta
+      FROM %i
+        LEFT JOIN %i
           USING(entry_id)
-        LEFT JOIN $postmeta
+        LEFT JOIN %i
           ON post_id=form_id 
         WHERE
           form_id IN ($votation_form_id_placeholders)
-          AND $frmt_form_entry_meta.meta_key="email-1"
+          AND %i.meta_key="email-1"
         GROUP BY form_id
       ;
     EOD;
   return $wpdb->get_results(
     $wpdb->prepare(
       $votation_result_query,
-      VOTATION_FORM_IDS
+      array_merge(
+        [$postmeta,
+          $frmt_form_entry,
+          $frmt_form_entry_meta,
+          $postmeta],
+        VOTATION_FORM_IDS,
+        [$frmt_form_entry_meta]
+      )
     )
   );
 }
@@ -150,20 +157,26 @@ function get_votes_per_ip_results()
   $votation_form_id_placeholders = get_votation_form_id_placeholders();
   $votes_per_ip_query = <<<EOD
       SELECT
-      $frmt_form_entry_meta.meta_value as IP_address,
+      %i.meta_value as IP_address,
       COUNT(*) as num_votes
-        FROM $frmt_form_entry
-          LEFT JOIN $frmt_form_entry_meta
+        FROM %i
+          LEFT JOIN %i
             USING(entry_id)
           WHERE
             form_id IN ($votation_form_id_placeholders)
-            AND $frmt_form_entry_meta.meta_key="_forminator_user_ip"
+            AND %i.meta_key="_forminator_user_ip"
           GROUP BY IP_address;
     EOD;
   return $wpdb->get_results(
     $wpdb->prepare(
       $votes_per_ip_query,
-      VOTATION_FORM_IDS
+      array_merge(
+        [$frmt_form_entry_meta,
+          $frmt_form_entry,
+          $frmt_form_entry_meta],
+        VOTATION_FORM_IDS,
+        [$frmt_form_entry_meta]
+      )
     )
   );
 }
