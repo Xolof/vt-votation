@@ -62,12 +62,16 @@ function vtv_forminator_invalid_form_message_sameIP($invalid_form_message, $form
 function checkIfEmailHasAlreadyVoted($email, $form_id)
 {
   global $wpdb;
+  $prefix = $wpdb->prefix;
+  $frmt_form_entry = get_table_name_with_prefix('frmt_form_entry');
+  $frmt_form_entry_meta = get_table_name_with_prefix('frmt_form_entry_meta');
+
   $email_already_voted_query = <<<EOD
     SELECT
       EXISTS(
         SELECT meta_value
-          FROM wp_frmt_form_entry
-          LEFT JOIN wp_frmt_form_entry_meta
+          FROM $frmt_form_entry
+          LEFT JOIN $frmt_form_entry_meta
             USING(entry_id)
             WHERE meta_key="email-1"
               AND form_id = %d

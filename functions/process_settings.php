@@ -107,23 +107,28 @@ function get_votation_form_id_placeholders()
 function get_votation_results()
 {
   global $wpdb;
+  $prefix = $wpdb->prefix;
+  $postmeta = get_table_name_with_prefix('postmeta');
+  $frmt_form_entry = get_table_name_with_prefix('frmt_form_entry');
+  $frmt_form_entry_meta = get_table_name_with_prefix('frmt_form_entry_meta');
+
   $votation_form_id_placeholders = get_votation_form_id_placeholders();
   $votation_result_query = <<<EOD
       SELECT
         form_id, COUNT(*) as num_votes,
         SUBSTRING_INDEX(
-          SUBSTRING_INDEX(wp_postmeta.meta_value, 'formName";s:5:"', -1),
+          SUBSTRING_INDEX($postmeta.meta_value, 'formName";s:5:"', -1),
           '";s:7:"version";',
           1
         ) as book    
-      FROM wp_frmt_form_entry
-        LEFT JOIN wp_frmt_form_entry_meta
+      FROM $frmt_form_entry
+        LEFT JOIN $frmt_form_entry_meta
           USING(entry_id)
-        LEFT JOIN wp_postmeta
+        LEFT JOIN $postmeta
           ON post_id=form_id 
         WHERE
           form_id IN ($votation_form_id_placeholders)
-          AND wp_frmt_form_entry_meta.meta_key="email-1"
+          AND $frmt_form_entry_meta.meta_key="email-1"
         GROUP BY form_id
       ;
     EOD;
@@ -138,17 +143,21 @@ function get_votation_results()
 function get_votes_per_ip_results()
 {
   global $wpdb;
+  $postmeta = get_table_name_with_prefix('postmeta');
+  $frmt_form_entry = get_table_name_with_prefix('frmt_form_entry');
+  $frmt_form_entry_meta = get_table_name_with_prefix('frmt_form_entry_meta');
+
   $votation_form_id_placeholders = get_votation_form_id_placeholders();
   $votes_per_ip_query = <<<EOD
       SELECT
-      wp_frmt_form_entry_meta.meta_value as IP_address,
+      $frmt_form_entry_meta.meta_value as IP_address,
       COUNT(*) as num_votes
-        FROM wp_frmt_form_entry
-          LEFT JOIN wp_frmt_form_entry_meta
+        FROM $frmt_form_entry
+          LEFT JOIN $frmt_form_entry_meta
             USING(entry_id)
           WHERE
             form_id IN ($votation_form_id_placeholders)
-            AND wp_frmt_form_entry_meta.meta_key="_forminator_user_ip"
+            AND $frmt_form_entry_meta.meta_key="_forminator_user_ip"
           GROUP BY IP_address;
     EOD;
   return $wpdb->get_results(
