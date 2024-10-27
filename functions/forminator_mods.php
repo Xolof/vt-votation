@@ -94,7 +94,7 @@ function getSameIPErrorMessage($form_id)
   if (!empty($user_ip)) {
     $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
     if (!empty($last_entry)) {
-      $message = 'Någon har redan röstat på den här boken med den här IP-adressen.';
+      $message = ONLY_VOTE_ONE_TIME_PER_IP_MESSAGE;
     }
   }
   return $message;
