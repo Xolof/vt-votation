@@ -18,6 +18,8 @@ require_once (__DIR__ . '/functions/render_menu_sub_pages.php');
 require_once (__DIR__ . '/functions/process_settings.php');
 require_once (__DIR__ . '/functions/admin_notices.php');
 require_once (__DIR__ . '/functions/forminator_mods.php');
+require_once (__DIR__ . '/functions/table_prefix.php');
+require_once (__DIR__ . '/functions/vtv_log.php');
 
 define('ALLOW_MULTIPLE_VOTES_FROM_SAME_IP', json_decode(get_option('allow_multiple_votes_from_same_ip')) ?? 'yes');
 define('IP_BLOCK_LIST', json_decode(get_option('vt_votation_blocked_ips')) ?? []);
@@ -46,29 +48,4 @@ add_filter('forminator_custom_form_invalid_form_message', 'vtv_forminator_invali
 if (ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no') {
   add_filter('forminator_custom_form_submit_errors', 'vtv_forminator_submit_errors_sameIP', 15, 3);
   add_filter('forminator_custom_form_invalid_form_message', 'vtv_forminator_invalid_form_message_sameIP', 10, 2);
-}
-
-function get_table_name_with_prefix($tablename_without_prefix)
-{
-  global $wpdb;
-  $prefix = $wpdb->prefix;
-  $prefixed_tablename = $prefix . $tablename_without_prefix;
-
-  $table_exists = $wpdb->get_results(
-    $wpdb->prepare(
-      "SHOW TABLES LIKE '%s'",
-      $prefixed_tablename
-    )
-  );
-
-  if (count($table_exists)) {
-    return $prefixed_tablename;
-  };
-
-  throw new Exception("Table $prefixed_tablename not found.", 1);
-}
-
-function vtv_log($string)
-{
-  file_put_contents(__DIR__ . '/vtv.log', json_encode($string) . "\n", FILE_APPEND);
 }
