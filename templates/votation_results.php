@@ -27,7 +27,7 @@ uasort($votes_per_ip_results_db, 'cmp');
 <?php if (!count(VOTATION_FORM_IDS)): ?>
   <p>
     Inga formulär har valts.&nbsp
-     <a href="/wp/wp-admin/admin.php?page=render_votation_settings">Välj formulär i inställningarna.</a> 
+    <a href="<?= get_admin_url(); ?>admin.php?page=render_votation_settings">Välj formulär i inställningarna.</a>
   </p>
 <?php endif; ?>
 
