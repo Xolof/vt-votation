@@ -119,12 +119,7 @@ function get_votation_results()
   $votation_form_id_placeholders = get_votation_form_id_placeholders();
   $votation_result_query = <<<EOD
       SELECT
-        form_id, COUNT(*) as num_votes,
-        SUBSTRING_INDEX(
-          SUBSTRING_INDEX(%i.meta_value, 'formName";s:5:"', -1),
-          '";s:7:"version";',
-          1
-        ) as book    
+        form_id, COUNT(*) as num_votes, %i.meta_value as book
       FROM %i
         LEFT JOIN %i
           USING(entry_id)
@@ -136,7 +131,7 @@ function get_votation_results()
         GROUP BY form_id
       ;
     EOD;
-  return $wpdb->get_results(
+  $results = $wpdb->get_results(
     $wpdb->prepare(
       $votation_result_query,
       array_merge(
@@ -149,6 +144,7 @@ function get_votation_results()
       )
     )
   );
+  return $results;
 }
 
 function get_votes_per_ip_results()
