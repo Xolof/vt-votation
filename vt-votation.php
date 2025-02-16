@@ -52,7 +52,7 @@ add_action('init', 'vt_session_init');
 
 add_action('admin_menu', 'vtv_admin_page');
 add_action('admin_post_vtv_form_response', 'vtv_process_settings');
-add_action('admin_notices', 'print_plugin_admin_notices');
+add_action('admin_notices', 'vtv_print_plugin_admin_notices');
 
 add_filter('forminator_custom_form_submit_errors', 'vtv_forminator_submit_errors_block', 15, 3);
 add_filter('forminator_custom_form_invalid_form_message', 'vtv_forminator_invalid_form_message_block', 10, 3);
