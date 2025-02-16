@@ -30,8 +30,7 @@ function vtv_forminator_submit_errors_email($submit_errors, $form_id, $field_dat
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     $email = $field_data_array[0]['value'];
-    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
-    if ($email_already_voted_result == '1') {
+    if (emailHasAlreadyVoted($email, $form_id)) {
       $submit_errors[] = ONLY_VOTE_ONE_TIME_MESSAGE;
       $_SESSION['EMAIL_ALREADY_VOTED'] = true;
     }
@@ -72,7 +71,7 @@ function vtv_forminator_invalid_form_message_sameIP($invalid_form_message, $form
   return $invalid_form_message;
 }
 
-function checkIfEmailHasAlreadyVoted($email, $form_id)
+function emailHasAlreadyVoted($email, $form_id)
 {
   global $wpdb;
   $prefix = $wpdb->prefix;
@@ -97,7 +96,10 @@ function checkIfEmailHasAlreadyVoted($email, $form_id)
       [$frmt_form_entry, $frmt_form_entry_meta, $form_id, $email]
     )
   );
-  return $result[0]->email_already_voted;
+  if ($result[0]->email_already_voted == '1') {
+    return true;
+  }
+  return false;
 }
 
 function IpAlreadyVoted($form_id)
