@@ -13,7 +13,6 @@ function print_plugin_admin_notices()
         <p><b><?= htmlentities($_REQUEST['vtv_admin_notice_message']) ?></b></p>
         </div>
   <?php
-  } else {
-    return;
   }
+  return;
 }

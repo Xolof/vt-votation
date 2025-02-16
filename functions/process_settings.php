@@ -6,13 +6,12 @@ if (!defined('ABSPATH')) {
 
 function vtv_process_option($option_name, $post_data)
 {
+  $result = true;
   if (!get_option($option_name)) {
     $result = add_option($option_name, json_encode($post_data), '', 'no');
-  } else if (json_decode(get_option($option_name)) != $post_data) {
+  }
+  if (json_decode(get_option($option_name)) != $post_data) {
     $result = update_option($option_name, json_encode($post_data), '', 'no');
-  } else {
-    // Nothing to update
-    $result = true;
   }
   return $result;
 }
@@ -69,17 +68,17 @@ function vtv_process_settings()
 
     vtv_custom_redirect('success', 'Inställningarna sparades');
     exit;
-  } else {
-    wp_die(
-      __('Invalid nonce specified',
-        'vt-votation'),
-      __('Error', 'vt-votation'),
-      array(
-        'response' => 403,
-        'back_link' => 'admin.php?page=vt-votation'
-      )
-    );
   }
+
+  wp_die(
+    __('Invalid nonce specified',
+      'vt-votation'),
+    __('Error', 'vt-votation'),
+    array(
+      'response' => 403,
+      'back_link' => 'admin.php?page=vt-votation'
+    )
+  );
 }
 
 function vtv_custom_redirect($status, $message)
