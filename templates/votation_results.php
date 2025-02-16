@@ -73,14 +73,14 @@ uasort($votes_per_ip_results_db, 'cmp');
 <?php endif; ?>
 
 <?php if (count($votes_per_ip_results_db)): ?>
-<h2>Antal röster per IP-adress</h2>
+<h2>IP-adresser med flest röster</h2>
 <div class="wrap">
 <table class="widefat striped">
   <tr>
     <th><b>IP</b></th>
     <th><b>Antal röster</b></th>
   </tr>
-  <?php foreach ($votes_per_ip_results_db as $result): ?>
+  <?php foreach (array_slice($votes_per_ip_results_db, 0, 20) as $result): ?>
     <tr>
       <td>
         <?= htmlentities($result->IP_address) ?>
