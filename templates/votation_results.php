@@ -48,9 +48,8 @@ uasort($votes_per_ip_results_db, 'cmp');
   <?php $index = 1; ?>
   <?php foreach ($votation_results_db as $result): ?>
   <?php
-    $book = preg_split('/";s:/',
-      preg_split('/formName";s:\d+:"/', $result->book)[1]
-    )[0];
+  $book = preg_split('/";s:/',
+    preg_split('/formName";s:\d+:"/', $result->book)[1])[0];
   ?>
     <tr>
       <td>
@@ -66,7 +65,7 @@ uasort($votes_per_ip_results_db, 'cmp');
         <?= htmlentities(__($result->form_id, 'my-textdomain')) ?>
       </td>
     </tr>
-        <?php $index++?>
+        <?php $index++ ?>
   <?php endforeach; ?>
 </table>
 </div>
