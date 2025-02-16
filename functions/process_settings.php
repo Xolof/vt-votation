@@ -16,53 +16,62 @@ function vtv_process_option($option_name, $post_data)
   return $result;
 }
 
+function vtv_process_blocked_ips()
+{
+  $blocked_ips = $_POST['blocked_ips'] ?? [];
+  if (gettype($blocked_ips) != 'string') {
+    exit('Invalid IP value submitted. Blocked IPs should be a string.');
+  }
+
+  $blocked_ips = explode(',', $blocked_ips);
+  if ($blocked_ips[0] != '') {
+    foreach ($blocked_ips as $ip) {
+      if (
+        !(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
+          filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+      ) {
+        vtv_custom_redirect(
+          'error',
+          'Ogiltigt värde för IP-adresser. Ange blockerade IP-adresser separerade med komma.'
+        );
+        exit;
+      }
+    }
+  }
+
+  return vtv_process_option('vt_votation_blocked_ips', $blocked_ips);
+}
+
+function vtv_process_books()
+{
+  $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
+  foreach ($votation_forminator_form_ids as $form_id) {
+    if (!is_numeric($form_id)) {
+      exit('Invalid form data');
+    }
+  }
+
+  return vtv_process_option('vt_votation_forminator_form_ids', $votation_forminator_form_ids);
+}
+
+function vtv_process_multiple_votes_from_same_ip()
+{
+  $allow_multiple_votes_from_same_ip = $_POST['allow_multiple_votes_from_same_ip'];
+  if (isset($allow_multiple_votes_from_same_ip)) {
+    if (!in_array($allow_multiple_votes_from_same_ip, ['yes', 'no'])) {
+      exit('option update failed');
+    }
+
+    return vtv_process_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip);
+  }
+}
+
 function vtv_process_settings()
 {
   if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
-    $result = false;
-
-    $blocked_ips = $_POST['blocked_ips'] ?? [];
-    if (gettype($blocked_ips) != 'string') {
-      exit('Invalid IP value submitted. Blocked IPs should be a string.');
-    }
-
-    $blocked_ips = explode(',', $blocked_ips);
-    if ($blocked_ips[0] != '') {
-      foreach ($blocked_ips as $ip) {
-        if (
-          !(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
-            filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
-        ) {
-          vtv_custom_redirect(
-            'error',
-            'Ogiltigt värde för IP-adresser. Ange blockerade IP-adresser separerade med komma.'
-          );
-          exit;
-        }
-      }
-    }
-
-    $result = vtv_process_option('vt_votation_blocked_ips', $blocked_ips);
-
-    $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
-    foreach ($votation_forminator_form_ids as $form_id) {
-      if (!is_numeric($form_id)) {
-        exit('Invalid form data');
-      }
-    }
-
-    $result = vtv_process_option('vt_votation_forminator_form_ids', $votation_forminator_form_ids);
-
-    $allow_multiple_votes_from_same_ip = $_POST['allow_multiple_votes_from_same_ip'];
-    if (isset($allow_multiple_votes_from_same_ip)) {
-      if (!in_array($allow_multiple_votes_from_same_ip, ['yes', 'no'])) {
-        exit('option update failed');
-      }
-
-      $result = vtv_process_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip);
-    }
-
-    if ($result == false) {
+    if (vtv_process_blocked_ips() == false ||
+        vtv_process_books() == false ||
+        vtv_process_multiple_votes_from_same_ip() == false) {
       exit('option update failed');
     }
 
