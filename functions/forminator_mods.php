@@ -10,6 +10,7 @@ function vtv_forminator_submit_errors_block($submit_errors, $form_id, $field_dat
     $user_ip = Forminator_Geo::get_user_ip();
     if (in_array($user_ip, IP_BLOCK_LIST)) {
       $submit_errors[] = IP_BLOCKED_MESSAGE;
+      $_SESSION['IP_BLOCKED'] = true;
     }
   }
   return $submit_errors;
@@ -18,8 +19,7 @@ function vtv_forminator_submit_errors_block($submit_errors, $form_id, $field_dat
 function vtv_forminator_invalid_form_message_block($invalid_form_message, $form_id)
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
-    $user_ip = Forminator_Geo::get_user_ip();
-    if (in_array($user_ip, IP_BLOCK_LIST)) {
+    if ($_SESSION['IP_BLOCKED']) {
       return IP_BLOCKED_MESSAGE;
     }
   }
@@ -33,6 +33,7 @@ function vtv_forminator_submit_errors_email($submit_errors, $form_id, $field_dat
     $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
     if ($email_already_voted_result == '1') {
       $submit_errors[] = ONLY_VOTE_ONE_TIME_MESSAGE;
+      $_SESSION['EMAIL_ALREADY_VOTED'] = true;
     }
   }
   return $submit_errors;
@@ -41,12 +42,9 @@ function vtv_forminator_submit_errors_email($submit_errors, $form_id, $field_dat
 function vtv_forminator_invalid_form_message_email($invalid_form_message, $form_id)
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
-    $email = $_POST['email-1'];
-    $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
-    if ($email_already_voted_result == '1') {
+    if ($_SESSION['EMAIL_ALREADY_VOTED']) {
       $invalid_form_message = ONLY_VOTE_ONE_TIME_MESSAGE;
     }
-    return $invalid_form_message;
   }
   return $invalid_form_message;
 }
@@ -59,6 +57,7 @@ function vtv_forminator_submit_errors_sameIP($submit_errors, $form_id, $field_da
   $message = getSameIPErrorMessage($form_id);
   if ($message) {
     $submit_errors[]['submit'] = $message;
+    $_SESSION['IP_ALREADY_VOTED'] = true;
   }
   return $submit_errors;
 }
@@ -68,9 +67,8 @@ function vtv_forminator_invalid_form_message_sameIP($invalid_form_message, $form
   if (!in_array(intval($form_id), VOTATION_FORM_IDS)) {
     return $invalid_form_message;
   }
-  $message = getSameIPErrorMessage($form_id);
-  if ($message) {
-    return $message;
+  if ($_SESSION['IP_ALREADY_VOTED']) {
+    return ONLY_VOTE_ONE_TIME_PER_IP_MESSAGE;
   }
   return $invalid_form_message;
 }

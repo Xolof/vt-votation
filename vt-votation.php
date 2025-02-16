@@ -13,6 +13,14 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
+function vt_session_init()
+{
+  if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+  }
+  session_write_close();
+}
+
 require_once (__DIR__ . '/functions/menu_page.php');
 require_once (__DIR__ . '/functions/render_menu_sub_pages.php');
 require_once (__DIR__ . '/functions/process_settings.php');
@@ -39,6 +47,8 @@ register_deactivation_hook(
 
 function vtv_activate() {}
 function vtv_deactivate() {}
+
+add_action('init', 'vt_session_init');
 
 add_action('admin_menu', 'vtv_admin_page');
 add_action('admin_post_vtv_form_response', 'vtv_process_settings');
