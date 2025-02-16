@@ -54,9 +54,8 @@ function vtv_forminator_submit_errors_sameIP($submit_errors, $form_id, $field_da
   if (!in_array(intval($form_id), VOTATION_FORM_IDS)) {
     return $submit_errors;
   }
-  $message = getSameIPErrorMessage($form_id);
-  if ($message) {
-    $submit_errors[]['submit'] = $message;
+  if (IpAlreadyVoted($form_id)) {
+    $submit_errors[]['submit'] = ONLY_VOTE_ONE_TIME_PER_IP_MESSAGE;
     $_SESSION['IP_ALREADY_VOTED'] = true;
   }
   return $submit_errors;
@@ -101,15 +100,14 @@ function checkIfEmailHasAlreadyVoted($email, $form_id)
   return $result[0]->email_already_voted;
 }
 
-function getSameIPErrorMessage($form_id)
+function IpAlreadyVoted($form_id)
 {
-  $message = null;
   $user_ip = Forminator_Geo::get_user_ip();
   if (!empty($user_ip)) {
     $last_entry = Forminator_Form_Entry_Model::get_last_entry_by_ip_and_form($form_id, $user_ip);
     if (!empty($last_entry)) {
-      $message = ONLY_VOTE_ONE_TIME_PER_IP_MESSAGE;
+      return true;
     }
   }
-  return $message;
+  return;
 }
