@@ -43,8 +43,13 @@ function vtv_deactivate() {}
 add_action('admin_menu', 'vtv_admin_page');
 add_action('admin_post_vtv_form_response', 'vtv_process_settings');
 add_action('admin_notices', 'print_plugin_admin_notices');
-add_filter('forminator_custom_form_submit_errors', 'vtv_forminator_submit_errors_block_and_email', 15, 3);
-add_filter('forminator_custom_form_invalid_form_message', 'vtv_forminator_invalid_form_message_block_and_email', 10, 3);
+
+add_filter('forminator_custom_form_submit_errors', 'vtv_forminator_submit_errors_block', 15, 3);
+add_filter('forminator_custom_form_invalid_form_message', 'vtv_forminator_invalid_form_message_block', 10, 3);
+
+add_filter('forminator_custom_form_submit_errors', 'vtv_forminator_submit_errors_email', 15, 3);
+add_filter('forminator_custom_form_invalid_form_message', 'vtv_forminator_invalid_form_message_email', 10, 3);
+
 if (ALLOW_MULTIPLE_VOTES_FROM_SAME_IP == 'no') {
   add_filter('forminator_custom_form_submit_errors', 'vtv_forminator_submit_errors_sameIP', 15, 3);
   add_filter('forminator_custom_form_invalid_form_message', 'vtv_forminator_invalid_form_message_sameIP', 10, 2);
