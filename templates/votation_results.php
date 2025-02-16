@@ -24,12 +24,21 @@ uasort($votes_per_ip_results_db, 'cmp');
 
 ?>
 
+<?php
+$total_num_votes = 0;
+foreach ($votation_results_db as $row) {
+  $total_num_votes += $row->num_votes;
+};
+?>
+
 <?php if (!count(VOTATION_FORM_IDS)): ?>
   <p>
     Inga formulär har valts.&nbsp
     <a href="<?= get_admin_url(); ?>admin.php?page=render_votation_settings">Välj formulär i inställningarna.</a>
   </p>
 <?php endif; ?>
+
+<h2>Totalt antal röster: <?= $total_num_votes ?></h2>
 
 <?php if (!count($votation_results_db)): ?>
   <p>Det har ännu inte kommit in några röster.</p>
