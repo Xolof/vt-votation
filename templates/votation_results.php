@@ -28,7 +28,7 @@ uasort($votes_per_ip_results_db, 'cmp');
 $total_num_votes = 0;
 foreach ($votation_results_db as $row) {
   $total_num_votes += $row->num_votes;
-};
+}
 ?>
 
 <?php if (!count(VOTATION_FORM_IDS)): ?>

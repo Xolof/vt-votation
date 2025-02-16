@@ -19,7 +19,7 @@ function get_table_name_with_prefix($tablename_without_prefix)
 
   if (count($table_exists)) {
     return $prefixed_tablename;
-  };
+  }
 
   throw new Exception("Table $prefixed_tablename not found.", 1);
 }

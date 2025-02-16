@@ -16,7 +16,7 @@ function vtv_forminator_submit_errors_block_and_email($submit_errors, $form_id, 
     $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
     if ($email_already_voted_result == '1') {
       $submit_errors[] = ONLY_VOTE_ONE_TIME_MESSAGE;
-    };
+    }
   }
   return $submit_errors;
 }
@@ -33,7 +33,7 @@ function vtv_forminator_invalid_form_message_block_and_email($invalid_form_messa
     $email_already_voted_result = checkIfEmailHasAlreadyVoted($email, $form_id);
     if ($email_already_voted_result == '1') {
       $invalid_form_message = ONLY_VOTE_ONE_TIME_MESSAGE;
-    };
+    }
     return $invalid_form_message;
   }
   return $invalid_form_message;
