@@ -23,6 +23,7 @@ function vt_session_init()
 
 require_once (__DIR__ . '/functions/menu_page.php');
 require_once (__DIR__ . '/functions/render_menu_sub_pages.php');
+require_once (__DIR__ . '/functions/get_results.php');
 require_once (__DIR__ . '/functions/process_settings.php');
 require_once (__DIR__ . '/functions/admin_notices.php');
 require_once (__DIR__ . '/functions/forminator_mods.php');
