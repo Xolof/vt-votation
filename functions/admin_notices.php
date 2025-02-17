@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function vtv_print_plugin_admin_notices()
+function vtv_print_plugin_admin_notices(): null
 {
   $status = $_REQUEST['vtv_admin_notice_status'] ?? null;
   if (isset($status)) {
@@ -14,5 +14,5 @@ function vtv_print_plugin_admin_notices()
         </div>
   <?php
   }
-  return;
+  return null;
 }

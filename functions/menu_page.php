@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function vtv_admin_page()
+function vtv_admin_page(): void
 {
   add_menu_page(
     'Årets olämpligaste barnbok',

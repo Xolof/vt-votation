@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function get_table_name_with_prefix($tablename_without_prefix)
+function get_table_name_with_prefix(string $tablename_without_prefix): string
 {
   global $wpdb;
   $prefix = $wpdb->prefix;

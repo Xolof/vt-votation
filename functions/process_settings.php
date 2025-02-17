@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function vtv_process_settings()
+function vtv_process_settings(): void
 {
   if (isset($_POST['vtv_nonce']) && wp_verify_nonce($_POST['vtv_nonce'], 'vtv_nonce')) {
     if (vtv_process_blocked_ips() == false ||
@@ -28,7 +28,7 @@ function vtv_process_settings()
   );
 }
 
-function vtv_process_blocked_ips()
+function vtv_process_blocked_ips(): bool
 {
   $blocked_ips = $_POST['blocked_ips'] ?? [];
   if (gettype($blocked_ips) != 'string') {
@@ -54,7 +54,7 @@ function vtv_process_blocked_ips()
   return vtv_process_option('vt_votation_blocked_ips', $blocked_ips);
 }
 
-function vtv_process_books()
+function vtv_process_books(): bool
 {
   $votation_forminator_form_ids = isset($_POST['books']) ? array_keys($_POST['books']) : [];
   foreach ($votation_forminator_form_ids as $form_id) {
@@ -66,7 +66,7 @@ function vtv_process_books()
   return vtv_process_option('vt_votation_forminator_form_ids', $votation_forminator_form_ids);
 }
 
-function vtv_process_multiple_votes_from_same_ip()
+function vtv_process_multiple_votes_from_same_ip(): bool
 {
   $allow_multiple_votes_from_same_ip = $_POST['allow_multiple_votes_from_same_ip'];
   if (isset($allow_multiple_votes_from_same_ip)) {
@@ -76,9 +76,10 @@ function vtv_process_multiple_votes_from_same_ip()
 
     return vtv_process_option('allow_multiple_votes_from_same_ip', $allow_multiple_votes_from_same_ip);
   }
+  return true;
 }
 
-function vtv_process_option($option_name, $post_data)
+function vtv_process_option(string $option_name, array|string $post_data): bool
 {
   $result = true;
   if (!get_option($option_name)) {
@@ -90,7 +91,7 @@ function vtv_process_option($option_name, $post_data)
   return $result;
 }
 
-function vtv_custom_redirect($status, $message)
+function vtv_custom_redirect(string $status, string $message): void
 {
   wp_redirect(
     esc_url_raw(

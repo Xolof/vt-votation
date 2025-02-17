@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function vtv_forminator_submit_errors_block($submit_errors, $form_id, $field_data_array)
+function vtv_forminator_submit_errors_block(array $submit_errors, string $form_id, array $field_data_array): array
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     $user_ip = Forminator_Geo::get_user_ip();
@@ -16,7 +16,7 @@ function vtv_forminator_submit_errors_block($submit_errors, $form_id, $field_dat
   return $submit_errors;
 }
 
-function vtv_forminator_invalid_form_message_block($invalid_form_message, $form_id)
+function vtv_forminator_invalid_form_message_block(string $invalid_form_message, string $form_id): string
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     if ($_SESSION['IP_BLOCKED']) {
@@ -26,7 +26,7 @@ function vtv_forminator_invalid_form_message_block($invalid_form_message, $form_
   return $invalid_form_message;
 }
 
-function vtv_forminator_submit_errors_email($submit_errors, $form_id, $field_data_array)
+function vtv_forminator_submit_errors_email(array $submit_errors, string $form_id, array $field_data_array): array
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     $email = $field_data_array[0]['value'];
@@ -38,7 +38,7 @@ function vtv_forminator_submit_errors_email($submit_errors, $form_id, $field_dat
   return $submit_errors;
 }
 
-function vtv_forminator_invalid_form_message_email($invalid_form_message, $form_id)
+function vtv_forminator_invalid_form_message_email(string $invalid_form_message, string $form_id): string
 {
   if (in_array(intval($form_id), VOTATION_FORM_IDS)) {
     if ($_SESSION['EMAIL_ALREADY_VOTED']) {
@@ -48,7 +48,7 @@ function vtv_forminator_invalid_form_message_email($invalid_form_message, $form_
   return $invalid_form_message;
 }
 
-function vtv_forminator_submit_errors_sameIP($submit_errors, $form_id, $field_data_array)
+function vtv_forminator_submit_errors_sameIP(array $submit_errors, string $form_id, array $field_data_array): array
 {
   if (!in_array(intval($form_id), VOTATION_FORM_IDS)) {
     return $submit_errors;
@@ -60,7 +60,7 @@ function vtv_forminator_submit_errors_sameIP($submit_errors, $form_id, $field_da
   return $submit_errors;
 }
 
-function vtv_forminator_invalid_form_message_sameIP($invalid_form_message, $form_id)
+function vtv_forminator_invalid_form_message_sameIP(string $invalid_form_message, string $form_id): string
 {
   if (!in_array(intval($form_id), VOTATION_FORM_IDS)) {
     return $invalid_form_message;
@@ -71,7 +71,7 @@ function vtv_forminator_invalid_form_message_sameIP($invalid_form_message, $form
   return $invalid_form_message;
 }
 
-function emailHasAlreadyVoted($email, $form_id)
+function emailHasAlreadyVoted(string $email, string $form_id): bool
 {
   global $wpdb;
   $prefix = $wpdb->prefix;
@@ -102,7 +102,7 @@ function emailHasAlreadyVoted($email, $form_id)
   return false;
 }
 
-function IpAlreadyVoted($form_id)
+function IpAlreadyVoted(string $form_id): bool
 {
   $user_ip = Forminator_Geo::get_user_ip();
   if (!empty($user_ip)) {
@@ -111,5 +111,5 @@ function IpAlreadyVoted($form_id)
       return true;
     }
   }
-  return;
+  return false;
 }

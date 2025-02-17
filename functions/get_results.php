@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function get_votation_results()
+function get_votation_results(): array
 {
   global $wpdb;
   $prefix = $wpdb->prefix;
@@ -43,7 +43,7 @@ function get_votation_results()
   return $results;
 }
 
-function get_votes_per_ip_results()
+function get_votes_per_ip_results(): array
 {
   global $wpdb;
   $postmeta = get_table_name_with_prefix('postmeta');
@@ -63,7 +63,8 @@ function get_votes_per_ip_results()
             AND %i.meta_key="_forminator_user_ip"
           GROUP BY IP_address;
     EOD;
-  return $wpdb->get_results(
+
+  $results = $wpdb->get_results(
     $wpdb->prepare(
       $votes_per_ip_query,
       array_merge(
@@ -75,9 +76,11 @@ function get_votes_per_ip_results()
       )
     )
   );
+
+  return $results;
 }
 
-function get_votation_form_id_placeholders()
+function get_votation_form_id_placeholders(): string
 {
   $votation_form_id_placeholders = '';
   foreach (VOTATION_FORM_IDS as $id) {

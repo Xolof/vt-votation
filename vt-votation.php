@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function vt_session_init()
+function vt_session_init(): void
 {
   if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -46,8 +46,8 @@ register_deactivation_hook(
   'vtv_deactivate'
 );
 
-function vtv_activate() {}
-function vtv_deactivate() {}
+function vtv_activate(): void {}
+function vtv_deactivate(): void {}
 
 add_action('init', 'vt_session_init');
 
