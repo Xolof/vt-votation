@@ -4,16 +4,28 @@ if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
 
-function vtv_process_option($option_name, $post_data)
+function vtv_process_settings()
 {
-  $result = true;
-  if (!get_option($option_name)) {
-    $result = add_option($option_name, json_encode($post_data), '', 'no');
+  if (isset($_POST['vtv_nonce']) && wp_verify_nonce($_POST['vtv_nonce'], 'vtv_nonce')) {
+    if (vtv_process_blocked_ips() == false ||
+        vtv_process_books() == false ||
+        vtv_process_multiple_votes_from_same_ip() == false) {
+      exit('option update failed');
+    }
+
+    vtv_custom_redirect('success', 'Inställningarna sparades');
+    exit;
   }
-  if (json_decode(get_option($option_name)) != $post_data) {
-    $result = update_option($option_name, json_encode($post_data), '', 'no');
-  }
-  return $result;
+
+  wp_die(
+    __('Invalid nonce specified',
+      'vt-votation'),
+    __('Error', 'vt-votation'),
+    array(
+      'response' => 403,
+      'back_link' => 'admin.php?page=vt-votation'
+    )
+  );
 }
 
 function vtv_process_blocked_ips()
@@ -66,28 +78,16 @@ function vtv_process_multiple_votes_from_same_ip()
   }
 }
 
-function vtv_process_settings()
+function vtv_process_option($option_name, $post_data)
 {
-  if (isset($_POST['vtv_nonce']) && wp_verify_nonce($_POST['vtv_nonce'], 'vtv_nonce')) {
-    if (vtv_process_blocked_ips() == false ||
-        vtv_process_books() == false ||
-        vtv_process_multiple_votes_from_same_ip() == false) {
-      exit('option update failed');
-    }
-
-    vtv_custom_redirect('success', 'Inställningarna sparades');
-    exit;
+  $result = true;
+  if (!get_option($option_name)) {
+    $result = add_option($option_name, json_encode($post_data), '', 'no');
   }
-
-  wp_die(
-    __('Invalid nonce specified',
-      'vt-votation'),
-    __('Error', 'vt-votation'),
-    array(
-      'response' => 403,
-      'back_link' => 'admin.php?page=vt-votation'
-    )
-  );
+  if (json_decode(get_option($option_name)) != $post_data) {
+    $result = update_option($option_name, json_encode($post_data), '', 'no');
+  }
+  return $result;
 }
 
 function vtv_custom_redirect($status, $message)
@@ -105,15 +105,6 @@ function vtv_custom_redirect($status, $message)
       )
     )
   );
-}
-
-function get_votation_form_id_placeholders()
-{
-  $votation_form_id_placeholders = '';
-  foreach (VOTATION_FORM_IDS as $id) {
-    $votation_form_id_placeholders .= '%d,';
-  }
-  return rtrim($votation_form_id_placeholders, ',');
 }
 
 function get_votation_results()
@@ -153,6 +144,15 @@ function get_votation_results()
     )
   );
   return $results;
+}
+
+function get_votation_form_id_placeholders()
+{
+  $votation_form_id_placeholders = '';
+  foreach (VOTATION_FORM_IDS as $id) {
+    $votation_form_id_placeholders .= '%d,';
+  }
+  return rtrim($votation_form_id_placeholders, ',');
 }
 
 function get_votes_per_ip_results()
