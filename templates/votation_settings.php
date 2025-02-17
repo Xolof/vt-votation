@@ -10,12 +10,12 @@ $existing_votation_form_ids = VOTATION_FORM_IDS;
 <h1><?= __('Inställningar', 'my-textdomain'); ?></h1>
 
 <?php if (current_user_can('manage_options')): ?>
-  <?php $vtv_add_meta_nonce = wp_create_nonce('vtv_add_user_meta_form_nonce'); ?>        
-  <div class="vtv_add_user_meta_form">
+  <?php $vtv_nonce = wp_create_nonce('vtv_nonce'); ?>
+  <div class="vtv_form">
     <form 
       action="<?= esc_url(admin_url('admin-post.php')); ?>"
       method="post"
-      id="vtv_add_user_meta_form"
+      id="vtv_form"
     >      
       <fieldset>
         <legend>Formulär för omröstning</legend>
@@ -51,7 +51,7 @@ $existing_votation_form_ids = VOTATION_FORM_IDS;
       </fieldset>
       <br>
       <input type="hidden" name="action" value="vtv_form_response" />
-      <input type="hidden" name="vtv_add_user_meta_nonce" value="<?= htmlentities($vtv_add_meta_nonce) ?>" />
+      <input type="hidden" name="vtv_nonce" value="<?= htmlentities($vtv_nonce) ?>" />
       <input type="submit" name="submit" id="submit" class="button button-primary" value="Spara" />
     </form>
   </div>
@@ -60,7 +60,7 @@ $existing_votation_form_ids = VOTATION_FORM_IDS;
 <?php endif; ?>
 
 <style>
-.vtv_add_user_meta_form input[type=checkbox] {
+.vtv_form input[type=checkbox] {
   margin-top: 4px;
 }
 </style>

@@ -68,7 +68,7 @@ function vtv_process_multiple_votes_from_same_ip()
 
 function vtv_process_settings()
 {
-  if (isset($_POST['vtv_add_user_meta_nonce']) && wp_verify_nonce($_POST['vtv_add_user_meta_nonce'], 'vtv_add_user_meta_form_nonce')) {
+  if (isset($_POST['vtv_nonce']) && wp_verify_nonce($_POST['vtv_nonce'], 'vtv_nonce')) {
     if (vtv_process_blocked_ips() == false ||
         vtv_process_books() == false ||
         vtv_process_multiple_votes_from_same_ip() == false) {
