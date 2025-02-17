@@ -56,7 +56,7 @@ $existing_votation_form_ids = VOTATION_FORM_IDS;
     </form>
   </div>
 <?php else: ?>
-  <p><?php 'You are not authorized to perform this operation.' ?></p>
+  <p>You are not authorized to perform this operation.</p>
 <?php endif; ?>
 
 <style>
