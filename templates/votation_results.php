@@ -2,11 +2,6 @@
 if (!defined('ABSPATH')) {
   exit;  // Exit if accessed directly.
 }
-?>
-
-<h1>Resultat</h1>
-
-<?php
 
 $votation_results_db = $votation_results_db ?? [];
 $votes_per_ip_results_db = $votes_per_ip_results_db ?? [];
@@ -27,6 +22,8 @@ foreach ($votation_results_db as $row) {
   $total_num_votes += $row->num_votes;
 }
 ?>
+
+<h1>Resultat</h1>
 
 <?php if (!count(VOTATION_FORM_IDS)): ?>
   <p>
