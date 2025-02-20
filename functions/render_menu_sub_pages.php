@@ -11,7 +11,6 @@ function render_votation_manual()
 
 function render_votation_settings()
 {
-  $vt_votation_pages = get_pages();
   $vt_votation_forminator_forms = Forminator_API::get_forms();
   require_once (__DIR__ . '/../templates/votation_settings.php');
 }
