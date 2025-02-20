@@ -22,9 +22,6 @@ function cmp($a, $b)
 uasort($votation_results_db, 'cmp');
 uasort($votes_per_ip_results_db, 'cmp');
 
-?>
-
-<?php
 $total_num_votes = 0;
 foreach ($votation_results_db as $row) {
   $total_num_votes += $row->num_votes;
