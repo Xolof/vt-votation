@@ -3,7 +3,7 @@
 /*
  * Plugin Name: VT Votation
  * Description: Anpassningar för omröstning om årets mest olämpliga barnbok.
- * Version: 0.1.0
+ * Version: 1.0.0
  * Author: Liberdev
  * Author URI: https://liberdev.se
  * Text Domain: vt-votation
